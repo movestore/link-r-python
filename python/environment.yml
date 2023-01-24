@@ -1,0 +1,8 @@
+name: link-r-python
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - pandas
+  - geopandas
+  - movingpandas
