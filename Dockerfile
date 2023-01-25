@@ -29,6 +29,8 @@ RUN conda update --name base --channel defaults conda && \
 
 # the r part
 WORKDIR $PROJECT_DIR/r
+# move the co-pilot-r sdk into this sub-directory
+RUN mv ../src .
 # renv
 COPY --chown=$UID:$GID r/renv.lock r/.Rprofile ./
 COPY --chown=$UID:$GID r/renv/activate.R ./renv/
@@ -42,7 +44,7 @@ RUN cp renv.lock ../
 # teh project
 WORKDIR $PROJECT_DIR
 COPY --chown=$UID:$GID python/csv_2_pickle.py ./python/
-COPY --chown=$UID:$GID r/r2csv.R ./r/
+COPY --chown=$UID:$GID r/rds_2_csv.R ./r/
 
 # r -> python
 COPY --chown=$UID:$GID r2python.sh start-process.sh

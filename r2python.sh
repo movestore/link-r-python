@@ -8,5 +8,5 @@ set -o nounset
 
 conda activate "$HOME"/co-pilot-r/python-env
 
-Rscript r/rds_to_csv.R
+(cd r && Rscript r/rds_2_csv.R)
 python python/csv_2_pickle.py

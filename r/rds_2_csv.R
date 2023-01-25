@@ -18,7 +18,7 @@ tryCatch(
 
         projection <- raster::projection(data) # for move2 this will be st_crs()
         tz <- attr(timestamps(data),'tzone')
-        write.csv(data.frame("crs"=c(pr), "tzone"=c(tz)),appArtifactPath("meta.csv"),row.names=FALSE) #or any other format
+        write.csv(data.frame("crs"=c(projection), "tzone"=c(tz)),appArtifactPath("meta.csv"),row.names=FALSE) #or any other format
     },
     error = function(e)
     {
