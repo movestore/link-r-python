@@ -28,6 +28,7 @@ def read_data_csv(file_path):
 
 
 def adjust_timestamps(data, timezone):
+    # kudos: https://stackoverflow.com/a/18912631/810944
     data['timestamp_tz'] = data['timestamp'].apply(lambda x: x.tz_localize('UTC').tz_convert(timezone))
     print('applied timezone', timezone)
     print(data.head())
