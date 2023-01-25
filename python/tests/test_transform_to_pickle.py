@@ -1,22 +1,23 @@
 import datetime
 import unittest
 from zoneinfo import ZoneInfo
-import pandas as pd
-import transform_to_pickle as sut
+from ..transform_to_pickle import TransformToPickle
 
 
 class TransformToPickleTestCase(unittest.TestCase):
+    sut = TransformToPickle()
+
     def test_apply_timezone_plusOffset(self):
-        data = sut.read_data_csv('./sample/buffer.csv')
-        actual = sut.adjust_timestamps(data, '+02:00')
+        data = self.sut.read_data_csv(file_path='./python/sample/buffer.csv')
+        actual = self.sut.adjust_timestamps(data, '+02:00')
         print(actual['timestamp_tz'][0])
 
         expected = datetime.datetime(2013, 8, 8, 8, 47, 31, tzinfo=ZoneInfo('Europe/Berlin'))
         self.assertEqual(expected, actual['timestamp_tz'][0].to_pydatetime())
 
     def test_apply_timezone_name(self):
-        data = sut.read_data_csv('./sample/buffer.csv')
-        actual = sut.adjust_timestamps(data, 'Asia/Kolkata')
+        data = self.sut.read_data_csv(file_path='./python/sample/buffer.csv')
+        actual = self.sut.adjust_timestamps(data, 'Asia/Kolkata')
         print(actual['timestamp_tz'][0])
 
         # 2013-08-08 06:47:31 +5:30:00
@@ -24,8 +25,8 @@ class TransformToPickleTestCase(unittest.TestCase):
         self.assertEqual(expected, actual['timestamp_tz'][0].to_pydatetime())
 
     def test_apply_timezone_name(self):
-        data = sut.read_data_csv('./sample/buffer.csv')
-        actual = sut.adjust_timestamps(data, 'UTC')
+        data = self.sut.read_data_csv(file_path='./python/sample/buffer.csv')
+        actual = self.sut.adjust_timestamps(data, 'UTC')
         print(actual['timestamp_tz'][0])
 
         expected = datetime.datetime(2013, 8, 8, 6, 47, 31, tzinfo=ZoneInfo('UTC'))

@@ -1,7 +1,7 @@
-import transform_to_pickle
+from transform_to_pickle import TransformToPickle
 
 if __name__ == '__main__':
-    transform_to_pickle.convert(
+    TransformToPickle().convert(
         input_data_file_name='./sample/buffer.csv',
         input_meta_file_name='./sample/meta.csv',
         output_file_name='./sample/out.pickle'
