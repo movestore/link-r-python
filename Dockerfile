@@ -43,7 +43,7 @@ RUN cp renv.lock ../
 
 # teh project
 WORKDIR $PROJECT_DIR
-COPY --chown=$UID:$GID python/csv_2_pickle.py transform_to_pickle.py ./python/
+COPY --chown=$UID:$GID python/csv_2_pickle.py python/transform_to_pickle.py ./python/
 COPY --chown=$UID:$GID r/rds_2_csv.R ./r/
 
 # r -> python
