@@ -1,0 +1,40 @@
+{
+  "settings": [],
+  "createsArtifacts": true,
+  "dependencies": {
+    "R": [
+      {
+        "name": "move"
+      }
+    ]
+  },
+  "license": {
+    "key": "MIT"
+  },
+  "language": "eng",
+  "keywords": [
+    "poc",
+    "transformation",
+    "mapping",
+    "R",
+    "Python"
+  ],
+  "people": [
+    {
+      "firstName": "Clemens",
+      "middleInitials": null,
+      "lastName": "Hahn",
+      "email": "clemens+moveapps@couchbits.com",
+      "roles": [
+        "author",
+        "creator"
+      ],
+      "orcid": null,
+      "affiliation": null,
+      "affiliationRor": null
+    }
+  ],
+  "documentation": {
+    "url": "https://github.com/movestore/link-r-python/blob/main/README.md"
+  }
+}
