@@ -21,7 +21,6 @@ WORKDIR $PROJECT_DIR
 # the python part
 WORKDIR $PROJECT_DIR/python
 COPY --chown=$UID:$GID python/environment.yml /tmp/
-COPY --chown=$UID:$GID python/csv_2_pickle.py ./
 # build the conda environment
 ENV ENV_PREFIX $PROJECT_DIR/python-env
 RUN conda update --name base --channel defaults conda && \
@@ -30,7 +29,6 @@ RUN conda update --name base --channel defaults conda && \
 
 # the r part
 WORKDIR $PROJECT_DIR/r
-COPY --chown=$UID:$GID r/r2csv.R ./
 # renv
 COPY --chown=$UID:$GID r/renv.lock r/.Rprofile ./
 COPY --chown=$UID:$GID r/renv/activate.R ./renv/
@@ -41,7 +39,11 @@ RUN R -e 'renv::restore()'
 # setup hangar inspection
 RUN cp renv.lock ../
 
+# teh project
 WORKDIR $PROJECT_DIR
+COPY --chown=$UID:$GID python/csv_2_pickle.py ./python/
+COPY --chown=$UID:$GID r/r2csv.R ./r/
+
 # r -> python
 COPY --chown=$UID:$GID r2python.sh start-process.sh
 # python -> r
