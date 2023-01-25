@@ -19,8 +19,9 @@ ENV PROJECT_DIR $HOME/co-pilot-r
 WORKDIR $PROJECT_DIR
 
 # the python part
+WORKDIR $PROJECT_DIR/python
 COPY --chown=$UID:$GID python/environment.yml /tmp/
-COPY --chown=$UID:$GID python/csv_2_pickle.py ./python/
+COPY --chown=$UID:$GID python/csv_2_pickle.py ./
 # build the conda environment
 ENV ENV_PREFIX $PROJECT_DIR/python-env
 RUN conda update --name base --channel defaults conda && \
@@ -28,15 +29,19 @@ RUN conda update --name base --channel defaults conda && \
     conda clean --all --yes
 
 # the r part
-COPY --chown=$UID:$GID r/r2csv.R ./r/
+WORKDIR $PROJECT_DIR/r
+COPY --chown=$UID:$GID r/r2csv.R ./
 # renv
-COPY --chown=$UID:$GID r/renv.lock r/.Rprofile ./r/
-COPY --chown=$UID:$GID r/renv/activate.R ./r/renv/
+COPY --chown=$UID:$GID r/renv.lock r/.Rprofile ./
+COPY --chown=$UID:$GID r/renv/activate.R ./renv/
 ENV RENV_VERSION 0.16.0
 RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))"
 RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 RUN R -e 'renv::restore()'
+# setup hangar inspection
+RUN cp renv.lock ../
 
+WORKDIR $PROJECT_DIR
 # r -> python
 COPY --chown=$UID:$GID r2python.sh start-process.sh
 # python -> r
