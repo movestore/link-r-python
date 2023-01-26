@@ -32,7 +32,7 @@ class TransformToPickle:
 
     def adjust_timestamps(self, data, timezone):
         # kudos: https://stackoverflow.com/a/18912631/810944
-        data['timestamp_tz'] = data['timestamp'].apply(lambda x: x.tz_localize('UTC').tz_convert(timezone))
+        data['timestamp_tz'] = data['timestamp'].apply(lambda x: x.tz_localize(timezone))
         print('applied timezone', timezone)
         print(data.head())
         return data
