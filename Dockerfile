@@ -14,6 +14,8 @@ RUN echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> ~/.profile
 # make conda activate command available from /bin/bash --interative shells
 RUN conda init bash
 
+USER $USER
+
 # the app
 ENV PROJECT_DIR $HOME/co-pilot-r
 WORKDIR $PROJECT_DIR
