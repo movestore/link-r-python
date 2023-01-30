@@ -50,11 +50,12 @@ class TransformToPickle:
         return move
 
     def write_result(self, file_name, data):
+        print(type(data))
         pd.to_pickle(data, file_name)
 
     def convert(self, input_data_file_name, input_meta_file_name, output_file_name):
         meta = self.read_meta_csv(input_meta_file_name)
         data = self.read_data_csv(input_data_file_name)
         self.adjust_timestamps(data=data, timezone=meta.timezone)
-        self.create_moving_pandas(data=data, projection=meta.projection)
-        self.write_result(file_name=output_file_name, data=data)
+        movingpandas = self.create_moving_pandas(data=data, projection=meta.projection)
+        self.write_result(file_name=output_file_name, data=movingpandas)
