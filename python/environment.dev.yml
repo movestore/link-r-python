@@ -1,0 +1,16 @@
+name: link-r-python-dev
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - pandas
+  - geopandas
+  - movingpandas
+  # dev dependencies
+  - cartopy
+  - geopy
+  - geoviews
+  - hvplot
+  - matplotlib
+  - jupyterlab
+  # ./end dev dependencies
