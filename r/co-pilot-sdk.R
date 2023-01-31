@@ -2,9 +2,8 @@
 ## input/output ## adjust!
 ##################
 ## Provided testing datasets in `./data/raw`: 
-## "input1_pigeons.rds", "input2_geese.rds", "input3_stork.rds", "input4_goat.rds"  
 ## for own data: file saved as a .rds containing a object of class MoveStack
-inputFileName = "./data/raw/input2_whitefgeese.rds" 
+inputFileName = "./data/raw/input4_goat.rds" 
 
 ## optionally change the output file name
 unlink("./data/output/", recursive = TRUE) # delete "output" folder if it exists, to have a clean start for every run
