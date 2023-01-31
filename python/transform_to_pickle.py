@@ -40,7 +40,7 @@ class TransformToPickle:
     def create_moving_pandas(self, data, projection):
         move = mpd.TrajectoryCollection(
             data,
-            traj_id_col='individual.id',
+            traj_id_col='individual.local.identifier',
             crs=projection,
             t='timestamp_tz',  # use our converted timezone column
             x='location.long',
