@@ -43,12 +43,16 @@ RUN R -e 'renv::restore()'
 # setup hangar inspection
 RUN cp renv.lock ../
 
-# teh project
+# the project
 WORKDIR $PROJECT_DIR
+# r -> python
 COPY --chown=$UID:$GID python/csv_2_pickle.py python/transform_to_pickle.py ./python/
 COPY --chown=$UID:$GID r/rds_2_csv.R ./r/
+# python -> r
+COPY --chown=$UID:$GID python/pickle_2_csv.py python/transform_to_csv.py ./python/
+COPY --chown=$UID:$GID r/csv_2_rds.R ./r/
 
 # r -> python
-COPY --chown=$UID:$GID r2python.sh start-process.sh
+#COPY --chown=$UID:$GID r2python.sh start-process.sh
 # python -> r
 #COPY --chown=$UID:$GID python2r.sh start-process.sh
