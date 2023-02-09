@@ -1,6 +1,7 @@
 import pandas as pd
 import geopandas as gpd
 import movingpandas as mpd
+from pyproj import CRS
 
 
 class TransformToCsv:
@@ -14,19 +15,35 @@ class TransformToCsv:
         print(geopandas.info())
         return geopandas
 
+    def get_projection(self, data: gpd.GeoDataFrame) -> CRS:
+        crs = data.crs
+        print(crs)
+        return crs
+
+    def write_meta_csv(self, data: gpd.GeoDataFrame, file_path):
+        projection: CRS = self.get_projection(data=data)
+        meta = {
+            "crs": [projection.srs],
+            "tzone": ['todo']
+        }
+        df = pd.DataFrame(meta)
+        df.to_csv(file_path, index=False)
+
     def write_result(self, file_name, data: gpd.GeoDataFrame):
         print(type(data))
-        data.to_csv(file_name)
+        data.to_csv(file_name, index=False)
 
-    def convert(self, input_data_file_name, output_file_name):
+    def convert(self, input_data_file_name, output_file_name, output_meta_file_name):
         data = self.read_data_pickle(file_path=input_data_file_name)
         geopandas = self.create_geopandas(data=data)
         self.write_result(file_name=output_file_name, data=geopandas)
+        self.write_meta_csv(data=geopandas, file_path=output_meta_file_name)
 
 
 # just for dev
 if __name__ == '__main__':
     TransformToCsv().convert(
-        input_data_file_name='./sample/out.pickle',
-        output_file_name='./sample/out.csv'
+        input_data_file_name='./sample/csv-to-pickle/out.pickle',
+        output_file_name='./sample/pickle-to-csv/out.csv',
+        output_meta_file_name='./sample/pickle-to-csv/meta.csv'
     )

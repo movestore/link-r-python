@@ -1,1 +1,4 @@
 sample/out.*
+sample/csv-to-pickle/out.*
+sample/pickle-to-csv/out.*
+sample/pickle-to-csv/meta.*
