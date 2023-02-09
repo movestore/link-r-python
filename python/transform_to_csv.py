@@ -12,6 +12,9 @@ class TransformToCsv:
 
     def create_geopandas(self, data) -> gpd.GeoDataFrame:
         geopandas = data.to_point_gdf()
+        geopandas['location.long'] = geopandas['geometry'].apply(lambda p: p.x)
+        geopandas['location.lat'] = geopandas['geometry'].apply(lambda p: p.y)
+
         print(geopandas.info())
         return geopandas
 
