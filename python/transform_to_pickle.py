@@ -22,13 +22,12 @@ class TransformToPickle:
         return meta
 
     def read_data_csv(self, file_path):
-        print(os.getcwd())
-        csv = pd.read_csv(
+        deserialized = pd.read_csv(
             file_path,
             parse_dates=['timestamps'],
         )
-        print(csv.info())
-        return csv
+        print(deserialized.info())
+        return deserialized
 
     def adjust_timestamps(self, data, timezone):
         # kudos: https://stackoverflow.com/a/18912631/810944
@@ -59,3 +58,12 @@ class TransformToPickle:
         self.adjust_timestamps(data=data, timezone=meta.timezone)
         movingpandas = self.create_moving_pandas(data=data, projection=meta.projection)
         self.write_result(file_name=output_file_name, data=movingpandas)
+
+
+# just for dev
+if __name__ == '__main__':
+    TransformToPickle().convert(
+        input_data_file_name='./sample/buffer_2-animals.csv',
+        input_meta_file_name='./sample/meta.csv',
+        output_file_name='./sample/out.pickle'
+    )
