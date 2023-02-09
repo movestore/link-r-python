@@ -8,4 +8,4 @@
 set -e
 
 (cd python && conda activate "$HOME"/co-pilot-r/python-env && python pickle_2_csv.py)
-#(cd r && Rscript rds_2_csv.R)
+(cd r && Rscript csv_2_rds.R)
