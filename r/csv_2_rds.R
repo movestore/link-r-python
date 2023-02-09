@@ -17,20 +17,23 @@ tryCatch(
     
     if (dim(datapy)[1]==0) result <- NULL else
     {
-      o <- order(datapy$trackId,as.POSIXct(datapy$timestamps))
-      datapyo <- datapy[o,]
+      datapy$timestamps <- as.POSIXct(datapy$timestamps,format="%Y-%m-%d %H:%M:%S", tz=meta$tzone)      
       
+      dupl <- which(duplicated(datapy[,c("timestamps","trackId")]))
+      if (length(dupl)>0) datapyw <- datapy[-dupl,] #removes duplicates if any, as movestack does not allow them. easiest option
+      
+      datapyo <- datapyw[order(datapyw$trackId, datapyw$timestamps),]
+       
       data <- move(
         x=datapyo$location.long,
         y=datapyo$location.lat,
-        time=as.POSIXct(datapyo$timestamps),
+        time=datapyo$timestamps,
         proj=CRS(meta$crs),
         sensor=datapyo$sensor,
-        animal=datapyo$trackId, #is animal the track ID?
+        animal=datapyo$trackId,
         data=datapyo
       ) 
       
-      attr(timestamps(data),'tzone') <- meta$tzone
       result <- moveStack(data,forceTz=meta$tzone)
 
       storeResult(result = result, outputFile = outputFile)
