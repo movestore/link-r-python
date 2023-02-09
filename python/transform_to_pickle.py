@@ -32,7 +32,7 @@ class TransformToPickle:
 
     def adjust_timestamps(self, data, timezone):
         # kudos: https://stackoverflow.com/a/18912631/810944
-        data['timestamp_tz'] = data['timestamp'].apply(lambda x: x.tz_localize(timezone))
+        data['timestamp_tz'] = data['timestamps'].apply(lambda x: x.tz_localize(timezone))
         print('applied timezone', timezone)
         print(data.head())
         return data
@@ -40,7 +40,7 @@ class TransformToPickle:
     def create_moving_pandas(self, data, projection):
         move = mpd.TrajectoryCollection(
             data,
-            traj_id_col='individual.local.identifier',
+            traj_id_col='trackId',
             crs=projection,
             t='timestamp_tz',  # use our converted timezone column
             x='location.long',
