@@ -36,7 +36,7 @@ tryCatch(
       
       result <- moveStack(data,forceTz=meta$tzone)
 
-      storeResult(result = result, outputFile = outputFile)
+      storeResult(result = result, outputFile = outputFile())
     }
   },
   error = function(e)
