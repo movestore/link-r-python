@@ -20,11 +20,20 @@ class TransformToCsv:
         print(crs)
         return crs
 
+    def get_timezone(self, data: gpd.GeoDataFrame) -> str:
+        print(data.index)
+        if data.index.tz is None:
+            return 'UTC'
+        else:
+            # this is untested for now
+            return data.index.tz
+
     def write_meta_csv(self, data: gpd.GeoDataFrame, file_path):
         projection: CRS = self.get_projection(data=data)
+        tzone = self.get_timezone(data=data)
         meta = {
             "crs": [projection.srs],
-            "tzone": ['todo']
+            "tzone": [tzone]
         }
         df = pd.DataFrame(meta)
         df.to_csv(file_path, index=False)
