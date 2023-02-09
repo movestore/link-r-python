@@ -25,7 +25,7 @@ class TransformToPickle:
         print(os.getcwd())
         csv = pd.read_csv(
             file_path,
-            parse_dates=['timestamp'],
+            parse_dates=['timestamps'],
         )
         print(csv.info())
         return csv
