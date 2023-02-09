@@ -151,10 +151,10 @@
     },
     "raster": {
       "Package": "raster",
-      "Version": "3.6-13",
+      "Version": "3.6-14",
       "Source": "Repository",
-      "Repository": "RSPM",
-      "Hash": "2398b7f3d73637adfe6adc286e6844f4",
+      "Repository": "CRAN",
+      "Hash": "2406e2380237f4dcf84e83260419895a",
       "Requirements": [
         "Rcpp",
         "sp",
