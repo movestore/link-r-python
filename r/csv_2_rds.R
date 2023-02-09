@@ -20,9 +20,9 @@ tryCatch(
       datapy$timestamps <- as.POSIXct(datapy$timestamps,format="%Y-%m-%d %H:%M:%S", tz=meta$tzone)      
       
       dupl <- which(duplicated(datapy[,c("timestamps","trackId")]))
-      if (length(dupl)>0) datapyw <- datapy[-dupl,] #removes duplicates if any, as movestack does not allow them. easiest option
+      if (length(dupl)>0) datapy <- datapy[-dupl,] #removes duplicates if any, as movestack does not allow them. easiest option
       
-      datapyo <- datapyw[order(datapyw$trackId, datapyw$timestamps),]
+      datapyo <- datapy[order(datapy$trackId, datapy$timestamps),]
        
       data <- move(
         x=datapyo$location.long,
