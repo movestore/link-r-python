@@ -63,7 +63,7 @@ class TransformToPickle:
 # just for dev
 if __name__ == '__main__':
     TransformToPickle().convert(
-        input_data_file_name='./sample/buffer_2-animals.csv',
-        input_meta_file_name='./sample/meta.csv',
+        input_data_file_name='./sample/input3/buffer.csv',
+        input_meta_file_name='./sample/input3/meta.csv',
         output_file_name='./sample/out.pickle'
     )
