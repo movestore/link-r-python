@@ -1,4 +1,4 @@
 sample/out.*
 sample/csv-to-pickle/out.*
-sample/pickle-to-csv/out.*
-sample/pickle-to-csv/meta.*
+sample/pickle-to-csv/link.csv
+sample/pickle-to-csv/meta.csv

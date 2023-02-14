@@ -43,7 +43,7 @@ tryCatch(
       }
       # if no local.taxon given, then set NA (Not Available)
       
-      write.csv(data.csv,appArtifactPath("buffer.csv"),row.names=FALSE)
+      write.csv(data.csv,appArtifactPath("link.csv"),row.names=FALSE)
       
       projection <- raster::projection(data) # for move2 this will be st_crs()
       tz <- attr(timestamps(data),'tzone')

@@ -11,7 +11,7 @@ tryCatch(
     Sys.setenv(tz="UTC")
     
     # always includes timestamps, location.long, location.lat, trackId, sensor
-    datapy <- read.csv(appArtifactPath("buffer.csv"),header=TRUE)
+    datapy <- read.csv(appArtifactPath("link.csv"),header=TRUE)
     # always includes crs and tzone
     meta <- read.csv(appArtifactPath("meta.csv"),header=TRUE) 
     

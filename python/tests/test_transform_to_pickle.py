@@ -9,7 +9,7 @@ class TransformToPickleTestCase(unittest.TestCase):
 
     def test_apply_timezone_plusOffset(self):
         # prepare
-        data = self.sut.read_data_csv(file_path='./python/sample/buffer.csv')
+        data = self.sut.read_data_csv(file_path='./python/sample/link.csv')
         # execute
         actual = self.sut.adjust_timestamps(data, '+02:00')
         # verify
@@ -19,7 +19,7 @@ class TransformToPickleTestCase(unittest.TestCase):
 
     def test_apply_timezone_name(self):
         # prepare
-        data = self.sut.read_data_csv(file_path='./python/sample/buffer.csv')
+        data = self.sut.read_data_csv(file_path='./python/sample/link.csv')
         # execute
         actual = self.sut.adjust_timestamps(data, 'Asia/Kolkata')
         # verify
@@ -29,7 +29,7 @@ class TransformToPickleTestCase(unittest.TestCase):
 
     def test_apply_timezone_name(self):
         # prepare
-        data = self.sut.read_data_csv(file_path='./python/sample/buffer.csv')
+        data = self.sut.read_data_csv(file_path='./python/sample/link.csv')
         # execute
         actual = self.sut.adjust_timestamps(data, 'UTC')
         # verify
