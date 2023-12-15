@@ -12,8 +12,8 @@ class TransformToCsv:
 
     def create_geopandas(self, data) -> gpd.GeoDataFrame:
         geopandas = data.to_point_gdf()
-        geopandas['location.long'] = geopandas['geometry'].apply(lambda p: p.x)
-        geopandas['location.lat'] = geopandas['geometry'].apply(lambda p: p.y)
+        geopandas['coords_x'] = geopandas['geometry'].apply(lambda p: p.x)
+        geopandas['coords_y'] = geopandas['geometry'].apply(lambda p: p.y)
 
         print(geopandas.info())
         return geopandas
@@ -36,7 +36,10 @@ class TransformToCsv:
         tzone = self.get_timezone(data=data)
         meta = {
             "crs": [projection.srs],
-            "tzone": [tzone]
+            "tzone": [tzone]#,
+            ## to be done: add names of column containing timestamps and track id
+            # "timeColName": [timeColName],
+            # "trackIdColName": [trackIdColName]
         }
         df = pd.DataFrame(meta)
         df.to_csv(file_path, index=False)

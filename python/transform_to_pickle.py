@@ -17,6 +17,7 @@ class TransformToPickle:
         meta_csv = pd.read_csv(file_path)
         projection = meta_csv['crs'][0]
         tzone = meta_csv['tzone'][0]
+        
         meta = Meta(projection=projection, timezone=tzone)
         print(meta)
         return meta
@@ -24,14 +25,14 @@ class TransformToPickle:
     def read_data_csv(self, file_path):
         deserialized = pd.read_csv(
             file_path,
-            parse_dates=['timestamps'],
+            parse_dates=["timestamp"],
         )
         print(deserialized.info())
         return deserialized
 
     def adjust_timestamps(self, data, timezone):
         # kudos: https://stackoverflow.com/a/18912631/810944
-        data['timestamp_tz'] = data['timestamps'].apply(lambda x: x.tz_localize(timezone))
+        data['timestamp_tz'] = data["timestamp"].apply(lambda x: x.tz_localize(timezone))
         print('applied timezone', timezone)
         print(data.head())
         return data
@@ -39,11 +40,11 @@ class TransformToPickle:
     def create_moving_pandas(self, data, projection):
         move = mpd.TrajectoryCollection(
             data,
-            traj_id_col='trackId',
+            traj_id_col="individual_name_deployment_id",
             crs=projection,
             t='timestamp_tz',  # use our converted timezone column
-            x='location.long',
-            y='location.lat'
+            x='coords_x',
+            y='coords_y'
         )
         print(move)
         return move
