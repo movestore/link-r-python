@@ -18,11 +18,11 @@ tryCatch(
     
     if (dim(datapy)[1]==0) result <- NULL else
     {
-      datapy$timestamp <- as.POSIXct(datapy$timestamp,format="%Y-%m-%d %H:%M:%S", tz=meta$tzone)      
+      datapy[meta$trackIdColName] <- as.POSIXct(datapy[meta$trackIdColName],format="%Y-%m-%d %H:%M:%S", tz=meta$tzone)      
       result <- mt_as_move2(datapy,
                           coords = c("coords_x", "coords_y"),
-                          time_column="timestamp", # meta$trackIdColName,
-                          track_id_column= "individual_name_deployment_id", # meta$trackIdColName,
+                          time_column= meta$trackIdColName,
+                          track_id_column= meta$trackIdColName,
                           # track_attributes=c(),
                           crs= meta$crs
       )

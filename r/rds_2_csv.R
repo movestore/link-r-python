@@ -31,8 +31,7 @@ tryCatch(
     
       proj <- st_crs(data)[[1]] 
       tz <- attr(mt_time(data),'tzone')
-      meta <- data.frame(crs=c(proj), tzone=c(tz))
-      # meta <- data.frame(crs=c(proj), tzone=c(tz), timeColName=mt_time_column(data),trackIdColName=mt_track_id_column(data))
+      meta <- data.frame(crs=c(proj), tzone=c(tz), timeColName=mt_time_column(data),trackIdColName=mt_track_id_column(data))
       write.csv(meta,appArtifactPath("meta.csv"),row.names=FALSE)
       
     },
