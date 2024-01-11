@@ -32,7 +32,9 @@ RUN conda update --name base --channel defaults conda && \
 # the r part
 WORKDIR $PROJECT_DIR/r
 # move the co-pilot-r sdk into this sub-directory
+USER root:root
 RUN mv ../src .
+USER $USER
 # renv: restore the current snapshot
 COPY --chown=$UID:$GID r/renv.lock r/.Rprofile ./
 COPY --chown=$UID:$GID r/renv/activate.R r/renv/settings.dcf ./renv/
