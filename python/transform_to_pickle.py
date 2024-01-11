@@ -9,8 +9,6 @@ from dataclasses import dataclass
 class Meta:
     projection: str
     timezone: str
-    time_col_name: str
-    track_id_col_name: str
 
 
 class TransformToPickle:
@@ -19,41 +17,33 @@ class TransformToPickle:
         meta_csv = pd.read_csv(file_path)
         projection = meta_csv['crs'][0]
         tzone = meta_csv['tzone'][0]
-        time_col_name = meta_csv['timeColName'][0]
-        track_id_col_name = meta_csv['trackIdColName'][0]
-        
-        meta = Meta(projection=projection, timezone=tzone, time_col_name=time_col_name, track_id_col_name=track_id_col_name)
+        meta = Meta(projection=projection, timezone=tzone)
         print(meta)
         return meta
 
-    def read_data_csv(self, file_path, time_col_name):
+    def read_data_csv(self, file_path):
         deserialized = pd.read_csv(
             file_path,
-            parse_dates=[time_col_name],
+            parse_dates=['timestamps'],
         )
         print(deserialized.info())
         return deserialized
 
-    def adjust_timestamps(self, data, timezone, time_col_name):
+    def adjust_timestamps(self, data, timezone):
         # kudos: https://stackoverflow.com/a/18912631/810944
-        data['timestamp_tz'] = data[time_col_name].apply(lambda x: x.tz_localize(timezone))
-
-        # prepare data for movingpandas b/c of https://github.com/movingpandas/movingpandas/issues/303
-        # we need our timestamps in timezone 'UTC'; movingpandas can not work w/ timezone-info
-        data['timestamp_utc'] = data['timestamp_tz'].apply(lambda x: x.tz_convert('UTC').tz_localize(None))
+        data['timestamp_tz'] = data['timestamps'].apply(lambda x: x.tz_localize(timezone))
         print('applied timezone', timezone)
-        print(data[[time_col_name, 'timestamp_tz', 'timestamp_utc']])
-        # print(data.head())
+        print(data.head())
         return data
 
-    def create_moving_pandas(self, data, projection, track_id_col_name):
+    def create_moving_pandas(self, data, projection):
         move = mpd.TrajectoryCollection(
             data,
-            traj_id_col=track_id_col_name,
+            traj_id_col='trackId',
             crs=projection,
-            t='timestamp_utc',  # use our converted timezone column (UTC)
-            x='coords_x',
-            y='coords_y'
+            t='timestamp_tz',  # use our converted timezone column
+            x='location.long',
+            y='location.lat'
         )
         print(move)
         return move
@@ -64,16 +54,16 @@ class TransformToPickle:
 
     def convert(self, input_data_file_name, input_meta_file_name, output_file_name):
         meta = self.read_meta_csv(input_meta_file_name)
-        data = self.read_data_csv(input_data_file_name, time_col_name=meta.time_col_name)
-        self.adjust_timestamps(data=data, timezone=meta.timezone, time_col_name=meta.time_col_name)
-        movingpandas = self.create_moving_pandas(data=data, projection=meta.projection, track_id_col_name=meta.track_id_col_name)
+        data = self.read_data_csv(input_data_file_name)
+        self.adjust_timestamps(data=data, timezone=meta.timezone)
+        movingpandas = self.create_moving_pandas(data=data, projection=meta.projection)
         self.write_result(file_name=output_file_name, data=movingpandas)
 
 
 # just for dev
 if __name__ == '__main__':
     TransformToPickle().convert(
-        input_data_file_name='./sample/input4/link.csv',
-        input_meta_file_name='./sample/input4/meta.csv',
+        input_data_file_name='./sample/input3/link.csv',
+        input_meta_file_name='./sample/input3/meta.csv',
         output_file_name='./sample/csv-to-pickle/out.pickle'
     )

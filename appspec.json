@@ -4,13 +4,7 @@
   "dependencies": {
     "R": [
       {
-        "name": "move2"
-      },
-      {
-        "name": "dplyr"
-      },
-      {
-        "name": "sf"
+        "name": "move"
       }
     ]
   },
