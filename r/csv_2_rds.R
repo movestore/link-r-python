@@ -18,7 +18,7 @@ tryCatch(
     
     if (dim(datapy)[1]==0) result <- NULL else
     {
-      datapy[meta$timeColName] <- as.POSIXct(datapy[meta$timeColName],format="%Y-%m-%d %H:%M:%S", tz=meta$tzone)      
+      datapy[meta$timeColName] <- as.POSIXct(datapy %>% select(meta$timeColName) %>% sapply(as.character) %>% as.vector,format="%Y-%m-%d %H:%M:%S", tz=meta$tzone)      
       result <- mt_as_move2(datapy,
                           coords = c("coords_x", "coords_y"),
                           time_column= meta$timeColName,
