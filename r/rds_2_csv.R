@@ -13,7 +13,10 @@ tryCatch(
       Sys.setenv(tz="UTC")
       
       data <- readInput(sourceFile()) # .rds
-      data <- mt_as_event_attribute(data, names(mt_track_data(data)))
+      # 2024-01: this statement produces invalid CSV columns 
+      #           like `c(capture_longitude = NA, capture_latitude = NA)`
+      #           not surrounding `""` but included `,` - will break CSV!
+      # data <- mt_as_event_attribute(data, names(mt_track_data(data)))
       data <- dplyr::mutate(data, coords_x=sf::st_coordinates(data)[,1],
                            coords_y=sf::st_coordinates(data)[,2])
       data.csv <- data.frame(sf::st_drop_geometry(data))
