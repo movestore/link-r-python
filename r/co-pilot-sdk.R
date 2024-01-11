@@ -3,7 +3,7 @@
 ##################
 ## Provided testing datasets in `./data/raw`: 
 ## for own data: file saved as a .rds containing a object of class MoveStack
-inputFileName = "./data/raw/input4_goat.rds" 
+inputFileName = "./data/raw/input4_move2loc_LatLon.rds" 
 
 ## optionally change the output file name
 unlink("./data/output/", recursive = TRUE) # delete "output" folder if it exists, to have a clean start for every run
@@ -36,4 +36,4 @@ Sys.setenv(
 )
 
 source("rds_2_csv.R")
-#source("csv_2_rds.R")
+source("csv_2_rds.R")

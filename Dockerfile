@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/couchbits/movestore/movestore-groundcontrol/co-pilot-v1-r:geospatial-4.2.2-3188
+FROM registry.gitlab.com/couchbits/movestore/movestore-groundcontrol/co-pilot-v3-r:sdk-v3.0.4_geospatial-4.3.2_3559
 
 # install miniconda
 ENV MINICONDA_VERSION latest
@@ -32,15 +32,14 @@ RUN conda update --name base --channel defaults conda && \
 # the r part
 WORKDIR $PROJECT_DIR/r
 # move the co-pilot-r sdk into this sub-directory
+USER root:root
 RUN mv ../src .
-# renv
+USER $USER
+# renv: restore the current snapshot
 COPY --chown=$UID:$GID r/renv.lock r/.Rprofile ./
-COPY --chown=$UID:$GID r/renv/activate.R ./renv/
-ENV RENV_VERSION 0.16.0
-RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))"
-RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
+COPY --chown=$UID:$GID r/renv/activate.R r/renv/settings.dcf ./renv/
 RUN R -e 'renv::restore()'
-# setup hangar inspection
+# be prepared for the hangar inspection
 RUN cp renv.lock ../
 
 # the project

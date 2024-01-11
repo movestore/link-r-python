@@ -1,0 +1,2 @@
+"crs","tzone","timeColName","trackIdColName"
+"EPSG:4326","UTC","timestamp","individual_name_deployment_id"
