@@ -4,7 +4,8 @@ source("src/io/app_files.R")
 source("src/io/io_handler.R")
 source("src/io/rds.R")
 
-library(move)
+library(move2)
+library(dplyr)
 
 tryCatch(
   {
@@ -17,25 +18,17 @@ tryCatch(
     
     if (dim(datapy)[1]==0) result <- NULL else
     {
-      datapy$timestamps <- as.POSIXct(datapy$timestamps,format="%Y-%m-%d %H:%M:%S", tz=meta$tzone)      
+      datapy[meta$timeColName] <- as.POSIXct(datapy[meta$timeColName],format="%Y-%m-%d %H:%M:%S", tz=meta$tzone)      
+      result <- mt_as_move2(datapy,
+                          coords = c("coords_x", "coords_y"),
+                          time_column= meta$timeColName,
+                          track_id_column= meta$trackIdColName,
+                          # track_attributes=c(),
+                          crs= meta$crs
+      )
+      ## add remove empty locs??
+      result <- result |> dplyr::arrange(mt_track_id(result),mt_time(result))
       
-      dupl <- which(duplicated(datapy[,c("timestamps","trackId")]))
-      if (length(dupl)>0) datapy <- datapy[-dupl,] #removes duplicates if any, as movestack does not allow them. easiest option
-      
-      datapyo <- datapy[order(datapy$trackId, datapy$timestamps),]
-       
-      data <- move(
-        x=datapyo$location.long,
-        y=datapyo$location.lat,
-        time=datapyo$timestamps,
-        proj=CRS(meta$crs),
-        sensor=datapyo$sensor,
-        animal=datapyo$trackId,
-        data=datapyo
-      ) 
-      
-      result <- moveStack(data,forceTz=meta$tzone)
-
       storeResult(result = result, outputFile = outputFile())
     }
   },
