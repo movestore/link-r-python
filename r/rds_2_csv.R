@@ -13,9 +13,9 @@ tryCatch(
       Sys.setenv(tz="UTC")
       
       data <- readInput(sourceFile()) # .rds
-      # 2024-01: this statement produces invalid CSV columns 
-      #           like `c(capture_longitude = NA, capture_latitude = NA)`
-      #           not surrounding `""` but included `,` - will break CSV!
+      # 2024-01: this statement produces invalid CSV columns
+      #           eg `c(capture_longitude = NA, capture_latitude = NA)`
+      #           this value is not surrounded by quotes `""` and includes a `,` - this does break CSV!
       # data <- mt_as_event_attribute(data, names(mt_track_data(data)))
       data <- dplyr::mutate(data, coords_x=sf::st_coordinates(data)[,1],
                            coords_y=sf::st_coordinates(data)[,2])
