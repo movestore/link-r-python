@@ -1,0 +1,12 @@
+.conda
+
+r/renv/library/
+r/renv/local/
+r/renv/cellar/
+r/renv/lock/
+r/renv/python/
+r/renv/sandbox/
+r/renv/staging/
+
+sample
+x-archive
