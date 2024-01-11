@@ -23,6 +23,7 @@ class TransformToPickle:
         track_id_col_name = meta_csv['trackIdColName'][0]
         
         meta = Meta(projection=projection, timezone=tzone, time_col_name=time_col_name, track_id_col_name=track_id_col_name)
+        print(meta)
         return meta
 
     def read_data_csv(self, file_path, time_col_name):
