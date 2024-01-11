@@ -34,6 +34,10 @@ WORKDIR $PROJECT_DIR/r
 # move the co-pilot-r sdk into this sub-directory
 USER root:root
 RUN mv ../src .
+# cleanup: remove unusuded files form co-pilot-r
+RUN rm -rf ../renv ../renv.lock ../.Rprofile ../RFunction.R src/io/shiny_bookmark_handler.R
+# patch the co-pilot-r file `src/io/rds.R` in order to not dependend on `move1`
+COPY r/src/io/rds.R src/io/rds.R
 USER $USER
 # renv: restore the current snapshot
 COPY --chown=$UID:$GID r/renv.lock r/.Rprofile ./
