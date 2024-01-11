@@ -37,8 +37,13 @@ class TransformToPickle:
     def adjust_timestamps(self, data, timezone, time_col_name):
         # kudos: https://stackoverflow.com/a/18912631/810944
         data['timestamp_tz'] = data[time_col_name].apply(lambda x: x.tz_localize(timezone))
+
+        # prepare data for movingpandas b/c of https://github.com/movingpandas/movingpandas/issues/303
+        # we need our timestamps in timezone 'UTC'; movingpandas can not work w/ timezone-info
+        data['timestamp_utc'] = data['timestamp_tz'].apply(lambda x: x.tz_convert('UTC').tz_localize(None))
         print('applied timezone', timezone)
-        print(data.head())
+        print(data[[time_col_name, 'timestamp_tz', 'timestamp_utc']])
+        # print(data.head())
         return data
 
     def create_moving_pandas(self, data, projection, track_id_col_name):
@@ -46,7 +51,7 @@ class TransformToPickle:
             data,
             traj_id_col=track_id_col_name,
             crs=projection,
-            t='timestamp_tz',  # use our converted timezone column
+            t='timestamp_utc',  # use our converted timezone column (UTC)
             x='coords_x',
             y='coords_y'
         )
