@@ -38,6 +38,16 @@
       "orcid": null,
       "affiliation": null,
       "affiliationRor": null
+    },
+    {
+      "firstName": "Anne",
+      "middleInitials": "K",
+      "lastName": "Scharf",
+      "email": "ascharf@ab.mpg.de",
+      "roles": ["author"],
+      "orcid": "0000-0002-3357-8533",
+      "affiliation": "Max-Planck-Institute of Animal Behavior",
+      "affiliationRor": "https://ror.org/026stee22"
     }
   ],
   "documentation": {
