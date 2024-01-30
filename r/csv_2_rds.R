@@ -11,9 +11,9 @@ tryCatch(
   {
     Sys.setenv(tz="UTC")
     
-    # always includes timestamps, location.long, location.lat, trackId, sensor
+    # always includes "coords_x", "coords_y"
     datapy <- read.csv(appArtifactPath("link.csv"),header=TRUE)
-    # always includes crs and tzone
+    # always includes crs, tzone, timeColName, trackIdColName
     meta <- read.csv(appArtifactPath("meta.csv"),header=TRUE) 
     
     if (dim(datapy)[1]==0) result <- NULL else
