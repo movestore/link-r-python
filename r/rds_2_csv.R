@@ -18,7 +18,7 @@ tryCatch(
       prj <- st_crs(data)[[1]] 
       tz <- attr(mt_time(data),'tzone')
       meta <- data.frame(crs=c(prj), tzone=c(tz), timeColName=mt_time_column(data), trackIdColName=mt_track_id_column(data))
-      write.csv(meta,appArtifactPath("meta.csv"),row.names=FALSE)
+      write.csv(meta,Sys.getenv(x = "LINK_R_PYTHON_META"),row.names=FALSE)
       
       ## get link.csv
       data <- mt_as_event_attribute(data, names(mt_track_data(data)))
@@ -42,7 +42,7 @@ tryCatch(
       # }
       # # if no local.taxon given, then set NA (Not Available)
       
-      write.csv(data.csv,appArtifactPath("link.csv"),row.names=FALSE)
+      write.csv(data.csv,Sys.getenv(x = "LINK_R_PYTHON_BUFFER"),row.names=FALSE)
   
     },
     error = function(e)

@@ -12,9 +12,9 @@ tryCatch(
     Sys.setenv(tz="UTC")
     
     # always includes "coords_x", "coords_y"
-    datapy <- read.csv(appArtifactPath("link.csv"),header=TRUE)
+    datapy <- read.csv(Sys.getenv(x = "LINK_R_PYTHON_BUFFER"),header=TRUE)
     # always includes crs, tzone, timeColName, trackIdColName
-    meta <- read.csv(appArtifactPath("meta.csv"),header=TRUE) 
+    meta <- read.csv(Sys.getenv(x = "LINK_R_PYTHON_META"),header=TRUE)
     
     if (dim(datapy)[1]==0) result <- NULL else
     {
