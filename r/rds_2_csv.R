@@ -13,6 +13,14 @@ tryCatch(
       Sys.setenv(tz="UTC")
       
       data <- readInput(sourceFile()) # .rds
+      
+      ## get meta.csv
+      prj <- st_crs(data)[[1]] 
+      tz <- attr(mt_time(data),'tzone')
+      meta <- data.frame(crs=c(prj), tzone=c(tz), timeColName=mt_time_column(data), trackIdColName=mt_track_id_column(data))
+      write.csv(meta,appArtifactPath("meta.csv"),row.names=FALSE)
+      
+      ## get link.csv
       data <- mt_as_event_attribute(data, names(mt_track_data(data)))
       data <- dplyr::mutate(data, coords_x=sf::st_coordinates(data)[,1],
                             coords_y=sf::st_coordinates(data)[,2])
@@ -35,12 +43,7 @@ tryCatch(
       # # if no local.taxon given, then set NA (Not Available)
       
       write.csv(data.csv,appArtifactPath("link.csv"),row.names=FALSE)
-    
-      proj <- st_crs(data)[[1]] 
-      tz <- attr(mt_time(data),'tzone')
-      meta <- data.frame(crs=c(proj), tzone=c(tz), timeColName=mt_time_column(data), trackIdColName=mt_track_id_column(data))
-      write.csv(meta,appArtifactPath("meta.csv"),row.names=FALSE)
-      
+  
     },
     error = function(e)
     {
