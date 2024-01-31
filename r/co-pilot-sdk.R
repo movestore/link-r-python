@@ -32,7 +32,9 @@ Sys.setenv(
     SOURCE_FILE = inputFileName, 
     OUTPUT_FILE = outputFileName, 
     ERROR_FILE="./data/output/error.log", 
-    APP_ARTIFACTS_DIR ="./data/output/"
+    APP_ARTIFACTS_DIR ="./data/output/",
+    LINK_R_PYTHON_META="./data/output/meta.csv",
+    LINK_R_PYTHON_BUFFER="./data/output/link.csv"
 )
 
 source("rds_2_csv.R")
