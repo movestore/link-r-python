@@ -11,6 +11,15 @@
       },
       {
         "name": "sf"
+      },
+      {
+        "name": "vctrs"
+      },
+      {
+        "name": "purrr"
+      },
+      {
+        "name": "rlang"
       }
     ]
   },
