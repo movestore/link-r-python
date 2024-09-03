@@ -26,7 +26,7 @@ COPY --chown=$UID:$GID python/environment.yml /tmp/
 # build the conda environment
 ENV ENV_PREFIX $PROJECT_DIR/python-env
 RUN conda update --name base --channel defaults conda && \
-    conda env create --prefix $ENV_PREFIX --file /tmp/environment.yml --force && \
+    conda env create --prefix $ENV_PREFIX --file /tmp/environment.yml && \
     conda clean --all --yes
 
 # the r part
