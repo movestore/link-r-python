@@ -14,4 +14,4 @@ set -a
 set +a
 
 (cd r && Rscript rds_2_csv.R)
-(cd python && conda activate "$HOME"/co-pilot-r/python-env && python csv_2_pickle.py)
+(cd python && "${BIN_FOLDER}"/micromamba activate "$HOME"/co-pilot-r/python-env && python csv_2_pickle.py)

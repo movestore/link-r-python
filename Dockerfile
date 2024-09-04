@@ -1,20 +1,19 @@
-FROM registry.gitlab.com/couchbits/movestore/movestore-groundcontrol/co-pilot-v3-r:sdk-v3.0.4_geospatial-4.3.2_3559
+FROM registry.gitlab.com/couchbits/movestore/movestore-groundcontrol/co-pilot-v3-r:sdk-v3.2.0_geospatial-4.3.2_3649
 
-# install miniconda
-ENV MINICONDA_VERSION latest
-ENV CONDA_DIR $HOME/miniconda3
-RUN wget --quiet -O ~/Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh" && \
-    chmod +x ~/Miniforge3.sh && \
-    bash ~/Miniforge3.sh -b -p $CONDA_DIR && \
-    rm ~/Miniforge3.sh
-# make non-activate conda commands available
-ENV PATH=$CONDA_DIR/bin:$PATH
-# make conda activate command available from /bin/bash --login shells
-RUN echo ". $CONDA_DIR/etc/profile.d/conda.sh" >> ~/.profile
-# make conda activate command available from /bin/bash --interative shells
-RUN conda init bash
-
-USER $USER
+# install micromamba
+# kudos: https://github.com/mamba-org/micromamba-releases/blob/main/install.sh
+# alternative: https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html#manual-installation
+ENV BIN_FOLDER=$HOME/.local/bin
+ENV ROOT_PREFIX=$HOME/conda
+ENV ARCH="64"
+ENV PLATFORM="linux"
+ENV RELEASE_URL="https://github.com/mamba-org/micromamba-releases/releases/latest/download/micromamba-${PLATFORM}-${ARCH}"
+# Downloading artifact
+RUN mkdir -p "${BIN_FOLDER}"
+RUN wget ${WGET_OPTS:-} -qO "${BIN_FOLDER}/micromamba" "${RELEASE_URL}" && \
+    chmod +x "${BIN_FOLDER}/micromamba" && \
+    ${BIN_FOLDER}/micromamba shell init -s bash --root-prefix ${ROOT_PREFIX} && \
+    ${BIN_FOLDER}/micromamba config append channels conda-forge
 
 # the app
 ENV PROJECT_DIR $HOME/co-pilot-r
@@ -22,12 +21,11 @@ WORKDIR $PROJECT_DIR
 
 # the python part
 WORKDIR $PROJECT_DIR/python
-COPY --chown=$UID:$GID python/environment.yml /tmp/
+COPY --chown=$UID:$GID python/environment.yml .
 # build the conda environment
 ENV ENV_PREFIX $PROJECT_DIR/python-env
-RUN conda update --name base --channel defaults conda && \
-    conda env create --prefix $ENV_PREFIX --file /tmp/environment.yml && \
-    conda clean --all --yes
+RUN ${BIN_FOLDER}/micromamba create --prefix ${ENV_PREFIX} --file ./environment.yml && \
+    ${BIN_FOLDER}/micromamba clean --all --yes
 
 # the r part
 WORKDIR $PROJECT_DIR/r
@@ -58,4 +56,5 @@ COPY --chown=$UID:$GID r/csv_2_rds.R ./r/
 # r -> python
 #COPY --chown=$UID:$GID r2python.sh start-process.sh
 # python -> r
-#COPY --chown=$UID:$GID python2r.sh start-process.sh
+# COPY --chown=$UID:$GID python2r.sh start-process.sh
+COPY --chown=$UID:$GID r2python.sh python2r.sh ./
