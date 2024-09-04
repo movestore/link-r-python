@@ -13,5 +13,5 @@ set -a
 : ${LINK_R_PYTHON_META:=/tmp/artifacts/meta.csv}
 set +a
 
-(cd python && "${BIN_FOLDER}"/micromamba activate "$HOME"/co-pilot-r/python-env && python pickle_2_csv.py)
+(cd python && conda activate "$HOME"/co-pilot-r/python-env && python pickle_2_csv.py)
 (cd r && Rscript csv_2_rds.R)
