@@ -1,8 +1,8 @@
-FROM registry.gitlab.com/couchbits/movestore/movestore-groundcontrol/co-pilot-v3-r:sdk-v3.0.4_geospatial-4.3.2_3559
+FROM registry.gitlab.com/couchbits/movestore/movestore-groundcontrol/co-pilot-v3-r:sdk-v3.2.0_geospatial-4.3.2_3649
 
-# install miniconda
-ENV MINICONDA_VERSION latest
-ENV CONDA_DIR $HOME/miniconda3
+# install miniconda aka conda-forge
+ENV MINICONDA_VERSION=latest
+ENV CONDA_DIR=$HOME/miniconda3
 RUN wget --quiet -O ~/Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh" && \
     chmod +x ~/Miniforge3.sh && \
     bash ~/Miniforge3.sh -b -p $CONDA_DIR && \
@@ -17,16 +17,18 @@ RUN conda init bash
 USER $USER
 
 # the app
-ENV PROJECT_DIR $HOME/co-pilot-r
+ENV PROJECT_DIR=$HOME/co-pilot-r
 WORKDIR $PROJECT_DIR
 
 # the python part
 WORKDIR $PROJECT_DIR/python
 COPY --chown=$UID:$GID python/environment.yml /tmp/
 # build the conda environment
-ENV ENV_PREFIX $PROJECT_DIR/python-env
-RUN conda update --name base --channel defaults conda && \
-    conda env create --prefix $ENV_PREFIX --file /tmp/environment.yml && \
+# keep in mind that anaconda aka channel `conda` is blocked a MPCDF
+# https://gitlab.mpcdf.mpg.de/mpcdf-hpc-cloud/mvpr-moveapps/-/issues/29
+# miniconda uses channel `conda-forge` as default - so nothing to do here
+ENV ENV_PREFIX=$PROJECT_DIR/python-env
+RUN conda env create --prefix $ENV_PREFIX --file /tmp/environment.yml && \
     conda clean --all --yes
 
 # the r part
