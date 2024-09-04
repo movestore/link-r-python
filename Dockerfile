@@ -24,7 +24,7 @@ WORKDIR $PROJECT_DIR
 WORKDIR $PROJECT_DIR/python
 COPY --chown=$UID:$GID python/environment.yml /tmp/
 # build the conda environment
-# keep in mind that anaconda aka channel `conda` is blocked a MPCDF
+# keep in mind that anaconda aka channel `conda` is blocked in production env
 # https://gitlab.mpcdf.mpg.de/mpcdf-hpc-cloud/mvpr-moveapps/-/issues/29
 # miniconda uses channel `conda-forge` as default - so nothing to do here
 ENV ENV_PREFIX=$PROJECT_DIR/python-env
