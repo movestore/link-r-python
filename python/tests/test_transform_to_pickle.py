@@ -1,4 +1,6 @@
 import datetime
+import os
+import tempfile
 import unittest
 from zoneinfo import ZoneInfo
 from ..transform_to_pickle import TransformToPickle
@@ -36,6 +38,23 @@ class TransformToPickleTestCase(unittest.TestCase):
         # csv value: 2013-08-08 06:47:31
         expected = datetime.datetime(2013, 8, 8, 6, 47, 31, tzinfo=ZoneInfo('UTC'))
         self.assertEqual(expected, actual['timestamp_tz'][0].to_pydatetime())
+
+    def test_it_should_write_a_gzip_compressed_pickle(self):
+        # prepare
+        with tempfile.TemporaryDirectory() as tmp:
+            output = os.path.join(tmp, 'output_file')
+
+            # execute
+            self.sut.convert(
+                input_data_file_name='./python/sample/input3/link.csv',
+                input_meta_file_name='./python/sample/input3/meta.csv',
+                output_file_name=output
+            )
+
+            # verify: compressed although the file name carries no extension
+            with open(output, 'rb') as written:
+                actual = written.read(2)
+            self.assertEqual(b'\x1f\x8b', actual)
 
 
 if __name__ == '__main__':

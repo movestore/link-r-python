@@ -50,7 +50,9 @@ class TransformToPickle:
 
     def write_result(self, file_name, data):
         print(type(data))
-        pd.to_pickle(data, file_name)
+        # MoveApps dictates the output path and it carries no file extension, so the compression has
+        # to be stated explicitly rather than inferred from the file name.
+        pd.to_pickle(data, file_name, compression='gzip')
 
     def convert(self, input_data_file_name, input_meta_file_name, output_file_name):
         meta = self.read_meta_csv(input_meta_file_name)

@@ -20,4 +20,4 @@ COPY python/ ./python/
 # The test modules are named explicitly: they use relative imports and there is no
 # `__init__.py`, so `unittest discover` does not find them reliably.
 RUN conda run --no-capture-output --prefix ${ENV_PREFIX} python -m unittest \
-    python.tests.test_transform_to_pickle
+    python.tests.test_transform_to_pickle python.tests.test_transform_to_csv
