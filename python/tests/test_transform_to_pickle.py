@@ -23,7 +23,7 @@ class TransformToPickleTestCase(unittest.TestCase):
         self.assertEqual(expected, actual['timestamp_tz'][0].to_pydatetime())
         self.assertEqual(datetime.datetime(2013, 8, 8, 4, 47, 31, tzinfo=None), actual['timestamp_utc'][0].to_pydatetime())
 
-    def test_apply_timezone_name(self):
+    def test_apply_timezone_name_kolkata(self):
         # prepare
         data = self.sut.read_data_csv(file_path='./python/tests/data/link.csv', time_col_name='timestamp')
         # execute
@@ -33,9 +33,10 @@ class TransformToPickleTestCase(unittest.TestCase):
         # csv value: 2013-08-08 06:47:31
         expected = datetime.datetime(2013, 8, 8, 6, 47, 31, tzinfo=ZoneInfo('Asia/Kolkata'))
         self.assertEqual(expected, actual['timestamp_tz'][0].to_pydatetime())
-        self.assertEqual(datetime.datetime(2013, 8, 7, 23, 17, 31, tzinfo=None), actual['timestamp_utc'][0].to_pydatetime())
+        # 06:47:31 at UTC+05:30 is 01:17:31 UTC on the same day - India has no DST
+        self.assertEqual(datetime.datetime(2013, 8, 8, 1, 17, 31, tzinfo=None), actual['timestamp_utc'][0].to_pydatetime())
 
-    def test_apply_timezone_name(self):
+    def test_apply_timezone_name_utc(self):
         # prepare
         data = self.sut.read_data_csv(file_path='./python/tests/data/link.csv', time_col_name='timestamp')
         # execute
