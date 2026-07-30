@@ -73,7 +73,7 @@ class TransformToCsv:
 # just for dev
 if __name__ == '__main__':
     TransformToCsv().convert(
-        input_data_file_name='./sample/csv-to-pickle/out.pickle',
+        input_data_file_name='./sample/csv-to-pickle/out.pickle.gz',
         output_file_name='./sample/pickle-to-csv/link.csv',
         output_meta_file_name='./sample/pickle-to-csv/meta.csv'
     )
