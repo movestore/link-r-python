@@ -1,4 +1,6 @@
 import datetime
+import os
+import tempfile
 import unittest
 from zoneinfo import ZoneInfo
 
@@ -57,6 +59,23 @@ class TransformToPickleTestCase(unittest.TestCase):
         # execute & verify
         # pytz.exceptions.NonExistentTimeError: 2014-03-30 01:24:20
         self.assertRaises(pytz.exceptions.NonExistentTimeError, self.sut.adjust_timestamps, data, timezone='Europe/London', time_col_name='timestamp')
+
+    def test_it_should_write_a_gzip_compressed_pickle(self):
+        # prepare
+        with tempfile.TemporaryDirectory() as tmp:
+            output = os.path.join(tmp, 'output_file')
+
+            # execute
+            self.sut.convert(
+                input_data_file_name='./python/sample/input4/link.csv',
+                input_meta_file_name='./python/sample/input4/meta.csv',
+                output_file_name=output
+            )
+
+            # verify: compressed although the file name carries no extension
+            with open(output, 'rb') as written:
+                actual = written.read(2)
+            self.assertEqual(b'\x1f\x8b', actual)
 
 if __name__ == '__main__':
     unittest.main()
