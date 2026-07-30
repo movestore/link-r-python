@@ -10,3 +10,9 @@ r/renv/staging/
 
 sample
 x-archive
+
+# dev-only bulk, copied by neither the App image nor the test image.
+# `python/sample/**` is deliberately NOT excluded - the tests build their fixtures from it.
+r/data/
+notebook/
+python/notebooks/
