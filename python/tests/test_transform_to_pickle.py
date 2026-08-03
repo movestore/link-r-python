@@ -1,4 +1,6 @@
 import datetime
+import os
+import tempfile
 import unittest
 from zoneinfo import ZoneInfo
 
@@ -21,7 +23,7 @@ class TransformToPickleTestCase(unittest.TestCase):
         self.assertEqual(expected, actual['timestamp_tz'][0].to_pydatetime())
         self.assertEqual(datetime.datetime(2013, 8, 8, 4, 47, 31, tzinfo=None), actual['timestamp_utc'][0].to_pydatetime())
 
-    def test_apply_timezone_name(self):
+    def test_apply_timezone_name_kolkata(self):
         # prepare
         data = self.sut.read_data_csv(file_path='./python/tests/data/link.csv', time_col_name='timestamp')
         # execute
@@ -31,9 +33,10 @@ class TransformToPickleTestCase(unittest.TestCase):
         # csv value: 2013-08-08 06:47:31
         expected = datetime.datetime(2013, 8, 8, 6, 47, 31, tzinfo=ZoneInfo('Asia/Kolkata'))
         self.assertEqual(expected, actual['timestamp_tz'][0].to_pydatetime())
-        self.assertEqual(datetime.datetime(2013, 8, 7, 23, 17, 31, tzinfo=None), actual['timestamp_utc'][0].to_pydatetime())
+        # 06:47:31 at UTC+05:30 is 01:17:31 UTC on the same day - India has no DST
+        self.assertEqual(datetime.datetime(2013, 8, 8, 1, 17, 31, tzinfo=None), actual['timestamp_utc'][0].to_pydatetime())
 
-    def test_apply_timezone_name(self):
+    def test_apply_timezone_name_utc(self):
         # prepare
         data = self.sut.read_data_csv(file_path='./python/tests/data/link.csv', time_col_name='timestamp')
         # execute
@@ -57,6 +60,23 @@ class TransformToPickleTestCase(unittest.TestCase):
         # execute & verify
         # pytz.exceptions.NonExistentTimeError: 2014-03-30 01:24:20
         self.assertRaises(pytz.exceptions.NonExistentTimeError, self.sut.adjust_timestamps, data, timezone='Europe/London', time_col_name='timestamp')
+
+    def test_it_should_write_a_gzip_compressed_pickle(self):
+        # prepare
+        with tempfile.TemporaryDirectory() as tmp:
+            output = os.path.join(tmp, 'output_file')
+
+            # execute
+            self.sut.convert(
+                input_data_file_name='./python/sample/input4/link.csv',
+                input_meta_file_name='./python/sample/input4/meta.csv',
+                output_file_name=output
+            )
+
+            # verify: compressed although the file name carries no extension
+            with open(output, 'rb') as written:
+                actual = written.read(2)
+            self.assertEqual(b'\x1f\x8b', actual)
 
 if __name__ == '__main__':
     unittest.main()
