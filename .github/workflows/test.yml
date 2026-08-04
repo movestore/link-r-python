@@ -1,6 +1,24 @@
 name: test
 
-on: [push]
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Mondays, 04:17 UTC. Off the hour on purpose: GitHub's scheduler is congested at :00 and
+    # delays or silently drops runs queued there.
+    - cron: '17 4 * * 1'
+  # so a fresh resolution can be checked after a suspected break, instead of waiting for Monday
+  workflow_dispatch:
+
+# `true` exactly for the runs that must resolve the conda environment from scratch.
+# `test/Dockerfile` resolves the environment in its own layer - correctly, it is what keeps a
+# source-only change cheap - but since v2.2.0 that environment is deliberately open: only `pandas`
+# carries a floor and a ceiling. So a cached layer lets this suite report green against a
+# resolution nobody has re-checked, and nothing evicts it on its own, because every push's
+# `cache-from` resets GitHub's seven-day idle timer.
+env:
+  FRESH: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
 
 jobs:
   test:
@@ -22,5 +40,16 @@ jobs:
           context: .
           file: ./test/Dockerfile
           push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # `no-cache` alone ought to outrank an imported cache, but that precedence is documented
+          # nowhere, and it is the one assumption this whole guard rests on - so the fresh runs
+          # drop `cache-from` as well and the question stops mattering.
+          no-cache: ${{ env.FRESH == 'true' }}
+          # Do NOT "simplify" this to `env.FRESH == 'true' && '' || 'type=gha'`. `''` is falsy in
+          # GitHub expressions, so the `||` branch would always win and both paths would quietly
+          # get the cache back - reinstating the exact false green this exists to prevent.
+          cache-from: ${{ env.FRESH != 'true' && 'type=gha' || '' }}
+          # `ignore-error`: a pull request from a fork runs with a read-only token and cannot write
+          # the Actions cache, so the export 403s. Without this the run fails at the very end,
+          # after the tests have already passed. Import is unaffected - a PR may read the cache of
+          # its own branch, the base branch and the default branch - so fork PRs stay warm.
+          cache-to: type=gha,mode=max,ignore-error=true
