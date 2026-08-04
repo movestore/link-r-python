@@ -2,7 +2,18 @@ name: link-r-python
 channels:
   - conda-forge
 dependencies:
-  - python=3.9
-  - pandas
+  # `python=3.9` used to be pinned here, which capped pandas at 2.3.1 - and an App rebuilt in 2026
+  # writes a pickle that pandas 2.3.1 cannot deserialize:
+  #   NotImplementedError: (dtype('<M8[ns]'), array([[...]], dtype='datetime64[ns]'))
+  # Measured across seven environments while reading the same blob, the boundary is pandas alone:
+  #   2.2.2 fails, 2.3.1 fails, 2.3.3 reads it, 3.0.5 reads it - independent of the geopandas
+  #   (1.0.1 / 1.1.4) and movingpandas (0.17.2 / 0.18.1 / 0.22.4) version. 2.3.2 was not tested.
+  # So the floor belongs on pandas, and nothing else needs pinning.
+  - python
+  # The ceiling is deliberate and belongs in its own ticket: pandas 3 switches the default string
+  # dtype and datetime resolution (`str`, `datetime64[us]`), which reaches the R side through the CSV
+  # this App writes, and no test here covers that. It also drops the pytz dependency that
+  # `tests/test_transform_to_pickle.py` borrows transitively.
+  - pandas>=2.3.3,<3
   - geopandas
-  - movingpandas=0.17.2
+  - movingpandas

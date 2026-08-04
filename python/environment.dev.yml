@@ -2,8 +2,9 @@ name: link-r-python-dev
 channels:
   - conda-forge
 dependencies:
-  - python=3.9
-  - pandas
+  # kept in step with `environment.yml` - see the reasoning there
+  - python
+  - pandas>=2.3.3,<3
   - geopandas
   - movingpandas
   # dev dependencies
