@@ -26,16 +26,20 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    # GitHub's default is 360 minutes. That was harmless while every run was a cache hit and
+    # finished in seconds, but the weekly run now resolves conda for real - and a solver that
+    # hangs would otherwise burn six hours of runner time, once a week, unattended.
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Docker buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Test via build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./test/Dockerfile

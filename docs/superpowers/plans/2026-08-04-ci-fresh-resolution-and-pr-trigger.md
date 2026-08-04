@@ -459,6 +459,22 @@ an die Person, die die Cron-Zeile zuletzt geändert hat.'
 
 ---
 
+## Addendum — scope extended after Task 2
+
+Task 2 came back green but the log showed two things worth acting on, so the following were folded
+into the same pull request rather than deferred. The spec section *Carried in the same change*
+records the reasoning; this note exists so the plan is not a misleading record of what shipped.
+
+- Action majors bumped: `actions/checkout` v4 → v7, `docker/setup-buildx-action` v3 → v4,
+  `docker/build-push-action` v6 → v7 (every run warned about the Node 20 runtime).
+- `.github/dependabot.yml` added, `github-actions` only, grouped into one pull request.
+- `timeout-minutes: 30` on the job.
+- Spec updated with the finding that the *test* layer caches too, not only the conda layer — so a
+  green check on an unchanged tree executes no tests at all.
+
+The verification steps in Tasks 3 and 4 are unchanged and still apply. Task 4 Step 5 gains a second
+meaning: it now also confirms the bumped actions work on a real build.
+
 ## Self-Review
 
 **Spec coverage:**

@@ -37,6 +37,33 @@ watching for an unrelated dependency to have moved underneath.
 This is not hypothetical. During rollout an App build pulled its conda layer from the kaniko cache
 and completed "successfully" against the old environment.
 
+### It is worse than the ticket says: the test layer caches too
+
+Confirmed empirically on the first `pull_request` run of this change
+([run 30901212941](https://github.com/movestore/link-r-python/actions/runs/30901212941), 21 seconds,
+green):
+
+```
+#10 [4/6] RUN conda env create --prefix /opt/link-r-python/conda --file python/environment.yml
+#10 CACHED
+#12 [6/6] RUN conda run ... python -m unittest python.tests.test_transform_to_pickle ...
+#12 CACHED
+```
+
+The ticket describes the *resolution* going stale. But `unittest` runs in a `RUN` layer like any
+other, so on an unchanged tree it is cached as well and no test executes at all. A green check
+means "nothing needed rebuilding", not "the tests passed".
+
+For a change that touches only `.github/` or `docs/` that is the correct outcome — there is nothing
+to retest. And coverage of real changes is intact: touching `python/` invalidates the `COPY` layer,
+touching `environment.yml` invalidates the conda layer, and in both cases the tests re-run. So this
+does not call for a fix of its own.
+
+It does, however, change what the weekly run is *for*. It is not only the one run that re-resolves
+the environment; it is the one run that executes the test suite at all against an unchanged tree.
+That makes it the sole periodic evidence that the App's environment still works — which is a
+stronger reason to have it than the ticket claimed.
+
 Second, separate problem: the workflow triggers on `push` only. Pull requests from forks never run.
 For a template repo whose whole purpose is to be copied by external contributors, a fork PR is the
 *likelier* origin of a change than a branch in this repo.
@@ -124,6 +151,28 @@ The trigger is `pull_request`, **not** `pull_request_target`. `pull_request` run
 read-only token and no secrets, which is the whole reason it is safe to build arbitrary contributor
 Dockerfiles. `pull_request_target` would hand that same untrusted code a writable token.
 
+### Carried in the same change
+
+Three things surfaced while verifying the above and are fixed here rather than deferred, because
+all three are about the same thing: whether a green check can be believed.
+
+**Action majors.** `actions/checkout` v4 → v7, `docker/setup-buildx-action` v3 → v4,
+`docker/build-push-action` v6 → v7. Every run was warning that these target Node 20 and are being
+force-migrated to Node 24. All three majors are substantively just that runtime switch; the one
+real breaking change, `checkout` v7 refusing to check out fork code under `pull_request_target` and
+`workflow_run`, cannot affect us because we use neither — and it hardens the same boundary this
+design already chose.
+
+**`.github/dependabot.yml`.** The bump above is the symptom; the absence of an update mechanism is
+the cause. Three majors of drift went unnoticed until GitHub started warning. Scoped to
+`github-actions` only and grouped into a single pull request. The Docker ecosystem is deliberately
+left off: the App `Dockerfile` pulls from a private GitLab registry Dependabot cannot authenticate
+against, so enabling it would generate recurring failures rather than updates.
+
+**`timeout-minutes: 30`.** GitHub's default is 360. Harmless while every run was a cache hit
+finishing in 21 seconds — but the weekly run now resolves conda for real, unattended, and a hung
+solver would otherwise burn six hours of runner time every Monday.
+
 ## Out of scope
 
 **No `concurrency` block.** With `push` limited to `main` the duplicate-run problem is already
@@ -131,6 +180,18 @@ solved, and `cancel-in-progress` on a build that writes cache risks interrupting
 leaving a partial lineage.
 
 **No change to the pins in `environment.yml`.** The `pandas<3` ceiling has its own ticket.
+
+**No R tests.** Worth stating plainly because it is easy to miss: there are none. `find r -iname
+'*test*'` is empty, so CI covers the Python half of this translator App and nothing else. Writing
+them is a project, not a rider on a CI ticket — but the gap should not be discovered by accident.
+
+**`environment.dev.yml` is still never built.** It is kept "in step with `environment.yml`" by hand
+and can rot silently. Building it weekly too would roughly double the scheduled run's cost for a
+file no App ever uses at runtime.
+
+**No failure-to-issue reporting for scheduled runs.** It is the only measure that would fully
+deliver the ticket's premise — see Known limitations — but it needs `issues: write`, a
+`github-script` stage and deduplication, which is a different kind of change from this one.
 
 ## Known limitations
 
