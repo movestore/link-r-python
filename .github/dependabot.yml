@@ -1,0 +1,28 @@
+version: 2
+
+# Why this exists: the workflow's actions had drifted three majors behind - `actions/checkout` sat
+# on v4 while v7 was current - and nobody noticed until GitHub started warning that the Node 20
+# runtime those versions target is being force-migrated to Node 24. Pinning without a bump
+# mechanism only postpones that discovery to the day the fallback disappears.
+#
+# Deliberately limited to `github-actions`. The Docker ecosystem is *not* enabled: the App
+# `Dockerfile` pulls its base from a private GitLab registry that Dependabot cannot authenticate
+# against, so enabling it would produce recurring failures rather than updates. The base tag in
+# `test/Dockerfile` is pinned on purpose (see the comment there) and is reviewed by hand.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      # just after the weekly fresh-resolution run at 04:17 UTC, so all CI housekeeping for the
+      # week surfaces in one place instead of trickling in on random days
+      time: '04:30'
+      timezone: Etc/UTC
+    # one pull request for all action bumps, not one per action - each PR costs a full CI run
+    groups:
+      actions:
+        patterns:
+          - '*'
+    commit-message:
+      prefix: ci
