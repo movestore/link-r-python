@@ -359,7 +359,12 @@ vignettes/*.pdf
 .Renviron
 
 # pkgdown site
-docs/
+# `docs/*` rather than `docs/`: the rule covers *generated* pkgdown output, and this repo has no
+# pkgdown site at all - it inherits the rule from the R gitignore template. Ignoring the directory
+# itself would stop git descending into it, and the negation below could never take effect.
+docs/*
+# hand-written design docs, which are sources and belong in the repo
+!docs/superpowers/
 
 # translation temp files
 po/*~
