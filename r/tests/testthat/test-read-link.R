@@ -59,19 +59,21 @@ test_that("readLink keeps sub-second times", {
   expect_lt(abs(as.numeric(mt_time(actual))[1] %% 1 - 0.123), 5e-4)
 })
 
-test_that("readLink leaves python's True and False as text (v2.2.0, pinned)", {
-  # arrange
+test_that("readLink turns python's True, False and missing value back into logical", {
+  # arrange: pandas writes a missing value as an empty field
   buffer <- writeTempLines(c(
-    "timestamp_utc,track,coords_x,coords_y,visible",
-    "2021-07-01 06:40:00,a,1,2,True",
-    "2021-07-01 06:46:00,a,1,2,False"
+    "timestamp_utc,track,coords_x,coords_y,visible,comment",
+    "2021-07-01 06:40:00,a,1,2,True,True story",
+    "2021-07-01 06:46:00,a,1,2,False,",
+    "2021-07-01 06:52:00,a,1,2,,x"
   ))
 
   # act
   actual <- readLink(bufferFile = buffer, metaFile = metaFileFor())
 
-  # assert
-  expect_equal(actual$visible, c("True", "False"))
+  # assert: a column with other text stays text
+  expect_equal(actual$visible, c(TRUE, FALSE, NA))
+  expect_type(actual$comment, "character")
 })
 
 test_that("readLink returns NULL for an empty buffer file", {

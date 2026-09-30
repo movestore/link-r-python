@@ -56,6 +56,19 @@ writeLink <- function(data, bufferFile, metaFile) {
   write.csv(linkTable(data = data), bufferFile, row.names=FALSE)
 }
 
+# python writes logical values as True/False and a missing one as an empty field; read.csv keeps all
+# three as text. A column holding nothing else goes back to TRUE/FALSE/NA; any other column is untouched.
+logicalFromPython <- function(x) {
+  if (!is.character(x)) {
+    return(x)
+  }
+  values <- x[!is.na(x) & x != ""]
+  if (length(values) == 0 || !all(values %in% c("True", "False"))) {
+    return(x)
+  }
+  ifelse(x == "True", TRUE, ifelse(x == "False", FALSE, NA))
+}
+
 # NULL for an empty buffer or a buffer without rows
 readLink <- function(bufferFile, metaFile) {
   # python writes an empty buffer for an empty TrajectoryCollection
@@ -72,6 +85,7 @@ readLink <- function(bufferFile, metaFile) {
     return(NULL)
   }
 
+  datapy[] <- lapply(datapy, logicalFromPython)
   # %OS: python writes fractions of a second, %S would drop them
   datapy[meta$timeColName] <- as.POSIXct(datapy %>% select(meta$timeColName) %>% sapply(as.character) %>% as.vector,format="%Y-%m-%d %H:%M:%OS", tz=meta$tzone)
   result <- mt_as_move2(datapy,
