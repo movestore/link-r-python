@@ -72,7 +72,8 @@ readLink <- function(bufferFile, metaFile) {
     return(NULL)
   }
 
-  datapy[meta$timeColName] <- as.POSIXct(datapy %>% select(meta$timeColName) %>% sapply(as.character) %>% as.vector,format="%Y-%m-%d %H:%M:%S", tz=meta$tzone)
+  # %OS: python writes fractions of a second, %S would drop them
+  datapy[meta$timeColName] <- as.POSIXct(datapy %>% select(meta$timeColName) %>% sapply(as.character) %>% as.vector,format="%Y-%m-%d %H:%M:%OS", tz=meta$tzone)
   result <- mt_as_move2(datapy,
                         coords = c("coords_x", "coords_y"),
                         time_column= meta$timeColName,

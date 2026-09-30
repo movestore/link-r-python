@@ -22,10 +22,11 @@ for (case in contractCases) {
     # act
     actual <- readLink(bufferFile = file.path(contractDir, case, "py", "link.csv"), metaFile = file.path(contractDir, case, "py", "meta.csv"))
 
-    # assert: v2.2.0 truncates sub-second times
+    # assert: times to the millisecond, as an absolute difference - expect_equal's tolerance is
+    # relative, and at 1.4e9 seconds even its default forgives 20 seconds
     kept <- input[as.character(mt_track_id(input)) %in% as.character(mt_track_id(actual)), ]
     expect_equal(nrow(actual), nrow(kept))
     expect_equal(sf::st_crs(actual), sf::st_crs(input))
-    expect_equal(sort(as.numeric(mt_time(actual))), floor(sort(as.numeric(mt_time(kept)))))
+    expect_lt(max(abs(sort(as.numeric(mt_time(actual))) - sort(as.numeric(mt_time(kept))))), 5e-4)
   })
 }

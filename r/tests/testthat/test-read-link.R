@@ -44,7 +44,7 @@ test_that("readLink reads the times in the tzone of meta.csv", {
   expect_equal(format(mt_time(actual)[1], "%Y-%m-%d %H:%M:%S", tz = "UTC"), "2021-07-01 01:10:00")
 })
 
-test_that("readLink truncates sub-second times (v2.2.0, pinned)", {
+test_that("readLink keeps sub-second times", {
   # arrange
   buffer <- writeTempLines(c(
     "timestamp_utc,track,coords_x,coords_y",
@@ -55,8 +55,8 @@ test_that("readLink truncates sub-second times (v2.2.0, pinned)", {
   # act
   actual <- readLink(bufferFile = buffer, metaFile = metaFileFor())
 
-  # assert
-  expect_equal(as.numeric(mt_time(actual))[1] %% 1, 0)
+  # assert: an absolute difference - a double at 1.6e9 seconds carries the .123 only to about 1e-7
+  expect_lt(abs(as.numeric(mt_time(actual))[1] %% 1 - 0.123), 5e-4)
 })
 
 test_that("readLink leaves python's True and False as text (v2.2.0, pinned)", {
