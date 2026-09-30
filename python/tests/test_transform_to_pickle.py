@@ -1,8 +1,12 @@
+import contextlib
 import datetime
+import io
 import os
 import tempfile
 import unittest
 from zoneinfo import ZoneInfo
+
+import pandas as pd
 
 from ..transform_to_pickle import Meta, TransformToPickle
 
@@ -105,6 +109,24 @@ class TransformToPickleTestCase(unittest.TestCase):
         # assert: the sample carries three distinct tracks
         self.assertEqual(3, len(actual.trajectories))
         self.assertEqual('EPSG:4326', actual.trajectories[0].df.crs.to_string())
+
+    def test_it_should_warn_about_every_track_movingpandas_drops(self):
+        # arrange: track `a` has one fix, movingpandas needs two for a trajectory
+        data = pd.DataFrame({
+            'track': ['a', 'b', 'b'],
+            'timestamp_utc': pd.to_datetime(['2021-07-01 06:40', '2021-07-01 06:40', '2021-07-01 06:46']),
+            'coords_x': [1.0, 2.0, 2.1],
+            'coords_y': [1.0, 2.0, 2.1],
+        })
+        output = io.StringIO()
+
+        # act
+        with contextlib.redirect_stdout(output):
+            self.sut.create_moving_pandas(data=data, projection='EPSG:4326', track_id_col_name='track')
+
+        # assert
+        actual = [line for line in output.getvalue().splitlines() if line.startswith('[WARN]')]
+        self.assertEqual(['[WARN] track a dropped: a trajectory needs at least two fixes, it has 1'], actual)
 
 if __name__ == '__main__':
     unittest.main()

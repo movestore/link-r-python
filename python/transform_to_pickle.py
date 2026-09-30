@@ -57,7 +57,17 @@ class TransformToPickle:
             y='coords_y'
         )
         print(move)
+        self.warn_about_dropped_tracks(data=data, move=move, track_id_col_name=track_id_col_name)
         return move
+
+    def warn_about_dropped_tracks(self, data, move, track_id_col_name):
+        # movingpandas needs two fixes for a trajectory and drops a track with fewer without a word;
+        # the loss cannot be avoided in this format, but it must not stay silent
+        kept = {trajectory.id for trajectory in move.trajectories}
+        rows_per_track = data[track_id_col_name].value_counts()
+        for track_id, rows in sorted(rows_per_track.items(), key=lambda item: str(item[0])):
+            if track_id not in kept:
+                print(f'[WARN] track {track_id} dropped: a trajectory needs at least two fixes, it has {rows}')
 
     def write_result(self, file_name, data):
         print(type(data))
