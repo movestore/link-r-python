@@ -17,6 +17,7 @@ on:
 # carries a floor and a ceiling. So a cached layer lets this suite report green against a
 # resolution nobody has re-checked, and nothing evicts it on its own, because every push's
 # `cache-from` resets GitHub's seven-day idle timer.
+# The `app` job's images resolve the same open environment inside the App Dockerfile.
 env:
   FRESH: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
 
@@ -57,3 +58,47 @@ jobs:
           # after the tests have already passed. Import is unaffected - a PR may read the cache of
           # its own branch, the base branch and the default branch - so fork PRs stay warm.
           cache-to: type=gha,mode=max,ignore-error=true
+
+  app:
+    name: App images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    # a first guess with headroom; set from the first measured cold run
+    timeout-minutes: 90
+    env:
+      CACHE: gha
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build both Apps and test them inside the images
+        uses: docker/bake-action@v7
+        with:
+          source: .
+          files: test/docker-bake.hcl
+          targets: test
+
+      # The platform passes no build arguments, so a Dockerfile copy without its DIRECTION edit must be
+      # refused. The builder still holds every layer from the step above, so this costs the last ones only.
+      # The grep makes sure the build failed at the check, not somewhere else: it matches the message
+      # the check prints, anchored at the line end, because the log also quotes the command that prints it.
+      - name: A build without a valid DIRECTION must fail
+        env:
+          CACHE: ''
+        run: |
+          for target in app-without-direction app-with-invalid-direction; do
+            if docker buildx bake -f test/docker-bake.hcl "$target" > "$target.log" 2>&1; then
+              echo "::error::$target was built"
+              exit 1
+            fi
+            if ! grep -q -E 'DIRECTION must be r2python or python2r$' "$target.log"; then
+              cat "$target.log"
+              echo "::error::$target failed for another reason"
+              exit 1
+            fi
+          done
