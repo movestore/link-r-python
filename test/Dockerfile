@@ -1,7 +1,8 @@
 # Runs the Python unit tests in the environment the App uses.
-# The base tag is pinned on purpose: in the sibling repo `cargo-agent-python` a floating
-# `:latest` silently moved to a base without `adduser` and broke the build.
-FROM condaforge/miniforge3:26.3.2-3
+# The base tag is the python co-pilot's own base, whose /opt/conda the App copies; test/coherence.R
+# holds CI to it. Pinned on purpose: in the sibling repo `cargo-agent-python` a floating `:latest`
+# silently moved to a base without `adduser` and broke the build.
+FROM condaforge/miniforge3:26.7.2-0
 LABEL org.opencontainers.image.authors="us@couchbits.com"
 LABEL org.opencontainers.image.vendor="couchbits GmbH"
 

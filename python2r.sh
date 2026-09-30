@@ -1,4 +1,4 @@
-#!/bin/bash --login
+#!/bin/bash
 ########################################################################################################################
 # converts from Python .pickle to R .rds
 ########################################################################################################################
@@ -13,5 +13,5 @@ set -a
 : ${LINK_R_PYTHON_META:=/tmp/artifacts/meta.csv}
 set +a
 
-(cd python && conda activate "$HOME"/co-pilot-r/python-env && python pickle_2_csv.py)
+(cd python && conda run --no-capture-output --prefix "$ENV_PREFIX" python pickle_2_csv.py)
 (cd r && Rscript csv_2_rds.R)
