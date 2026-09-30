@@ -94,6 +94,19 @@ patch has no reason to exist any more.
 Movebank's principle is "everything in UTC", so a non-UTC `tzone` is an edge case — but a
 reachable one: nothing stops a user from converting.
 
+**The round trip of `v2.2.0`, measured** on the production images themselves
+(`…-move2loc-to-movingpandas:7`, `…-movingpandas-to-move2loc:6`), every Template input plus the
+List file, R → python → R through each image's own `start-process.sh`:
+
+- intact: row and track count (except below), every instant (except below), coordinates within
+  5e-9, crs, track ids;
+- the time column comes back as `timestamp_utc` in UTC, next to an added `timestamp_tz`; the
+  original `timestamp` survives as a character column — by design of the python side;
+- attribute classes change in ways the CSV bridge implies: factor → character/integer,
+  integer64 → integer/numeric, units → integer/numeric, Date and POSIXct attributes →
+  character, sfc → WKT character;
+- the defects listed under [Defects](#defects).
+
 ## Goals
 
 1. Both translators build `FROM` the current R co-pilot and run on `moveapps`, R 4.6.1, with
@@ -122,6 +135,8 @@ reachable one: nothing stops a user from converting.
   - `linkTable(data)` → the `link.csv` data.frame: collapse list columns, track attributes to
     event attributes, `coords_x`/`coords_y`, geometry dropped, sfc columns as WKT, the time
     column formatted `%Y-%m-%d %H:%M:%OS3`.
+  - `writeLink(data, bufferFile, metaFile)` → writes `meta.csv`, then `link.csv`, in the order and
+    with the `write.csv` calls of `v2.2.0`.
   - `readLink(bufferFile, metaFile)` → a `move2` object, or `NULL` for an empty buffer.
 - **`r/rds_2_csv.R` and `r/csv_2_rds.R`** stay the entry points `start-process.sh` calls, reduced
   to: `library("moveapps")`, `moveapps::logger.init()`, `source("link.R")`, and the `tryCatch`
@@ -183,8 +198,9 @@ without `--no-capture-output` conda swallows the output, including a failure. Th
   `movestore/Template_R_Function_App@e00af0d779f9756c40161bffd8d6f0a5ebc77ced`.
   `input_move2loc_List.rds` stays — the only source of list columns. The `telemetrylist` files are
   not a translator input type and are left out. The old files remain in history.
-- **The non-UTC case is derived at run time** from input1 (`tzone` set to `Europe/Berlin`), not
-  stored as another binary.
+- **The non-UTC cases are derived at run time**, not stored as further binaries: input1 with
+  `tzone` set to `Europe/Berlin` (it has no fix in the repeated hour of 2021-10-31), and a
+  two-fix track at 00:30 and 01:30 UTC on 2021-10-31 in `Europe/Berlin` — both `02:30` local.
 - **Golden files** in `test/contract/<case>/`:
   - `input.rds` — a few rows cut from `r/data/raw` at fixed indices;
   - `meta.csv`, `link.csv` — the R → python direction;
@@ -193,12 +209,15 @@ without `--no-capture-output` conda swallows the output, including a failure. Th
   Cases: LatLon with three tracks, Mollweide including the midnight fix, sub-second fixes, Argos
   sfc event columns, list columns, non-UTC outside a DST switch.
 
-  **The goldens are produced once, by `v2.2.0`**: the production Dockerfiles (v7 / v6) built
-  locally against the old co-pilot, at tag `v2.2.0`. That makes them the proof that the port
-  changes nothing, carried into CI permanently. From then on a change to a golden is a deliberate
-  contract change and shows as such in the diff. The generator is committed alongside.
-- **The attribute type mapping of a round trip** (which input column class comes back as which
-  class) is measured with `v2.2.0` on all inputs and pinned in a file the round-trip test reads.
+  **The goldens are produced once, by `v2.2.0`** — by the production images themselves, pulled
+  from the platform registry, so the reference is literally what runs in production. That makes
+  them the proof that the port changes nothing, carried into CI permanently. From then on a change
+  to a golden is a deliberate contract change and shows as such in the diff. The generator is
+  committed alongside.
+- **The round-trip expectations** are measured the same way, on all inputs, and pinned in two
+  files the round-trip test reads: `test/roundtrip/expected.csv` (per input: rows and tracks out,
+  largest time deviation, output time column and `tzone`) and `test/roundtrip/classes.csv` (per
+  input and column: class in, class out). A defect fix changes the lines it corrects, visibly.
 
 ### Tests
 
@@ -213,15 +232,16 @@ New tests mark their blocks `# arrange` / `# act` / `# assert`; existing tests k
   `readLink` on `py/*.csv` yields the expected `move2` (rows, tracks, times, crs, columns).
 
 **Python** — `python/tests/`:
-- New coverage: `write_meta_csv`, the columns of the written `link.csv`, a tz-aware index, an empty
-  `TrajectoryCollection`, `read_meta_csv`, `create_moving_pandas` (crs, number of trajectories).
+- New coverage: `write_meta_csv`, the columns of the written `link.csv`, `read_meta_csv`,
+  `create_moving_pandas` (crs, number of trajectories).
 - `test_contract.py`: golden `*.csv` → pickle → `*.csv` equals `py/*.csv`.
 
 **Round trip** — CI, inside the real App images: for every `r/data/raw/*move2loc*.rds` plus the
-non-UTC case, the r2python image's `start-process.sh` writes a pickle, the python2r image's
-`start-process.sh` turns it back into an rds. Asserted strictly: row count, track per row, time to
-the millisecond including `tzone`, coordinates within tolerance, crs, every column name. Attribute
-classes are asserted against the pinned type mapping.
+non-UTC cases, the r2python image's `start-process.sh` writes a pickle, the python2r image's
+`start-process.sh` turns it back into an rds. Asserted against `expected.csv`: rows and tracks out,
+the largest time deviation, output time column and `tzone`; strictly: track per row, coordinates
+within 1e-8, crs, every input column name present. Classes are asserted against `classes.csv`.
+Plus one python-born case: an empty `TrajectoryCollection` through the python2r image.
 
 **Local only, once** — the old image is private, so these land in the pull request description:
 - old against new on every input, outputs compared;
@@ -269,24 +289,35 @@ classes are asserted against the pinned type mapping.
 
 ### Defects
 
-Fixed in this change, each in its own commit, each with the test that pins the corrected behaviour.
-Where a defect is only suspected, it is measured first and fixed only if real.
+All measured on the `v2.2.0` production images. Fixed in this change, each in its own commit, each
+with the test that pins the corrected behaviour.
 
-1. **An empty input produces no output file.** `csv_2_rds.R` calls `storeResult` only in the
-   non-empty branch, while the README promises a NULL object. Corrected behaviour: the NULL output
-   — an empty file, the platform's convention, which the next R App rejects with code 10. Whether
-   the python side even gets that far on an empty `TrajectoryCollection` is measured; the fix
-   goes where it breaks.
-2. **A tz-aware index** (`TransformToCsv.get_timezone`, marked "untested for now") returns a tz
-   object, not a string. `to_csv` writes `str(tz)`, which may happen to be a valid name
-   (`Europe/Berlin`) or not (`UTC+02:00`). Measured first.
-3. **DST ambiguity, R → python.** R writes local wall-clock times without an offset; python
-   re-localises them with `tz_localize(tzone)` and raises `AmbiguousTimeError` in the repeated
-   autumn hour — an instant R held unambiguously. The existing test
-   `test_ambiguous_dst_timestamp_should_raise_error` pins the raise. If the non-UTC round trip
-   confirms the failure, the fix transmits unambiguous instants (UTC in `link.csv`, `tzone` in
-   `meta.csv` as today, converted on the python side), and that test is changed deliberately. For
-   UTC data — all real data — `link.csv` stays byte-identical.
+1. **An empty `TrajectoryCollection` fails the python → R App.** `TransformToCsv.create_geopandas`
+   raises `ValueError: No objects to concatenate`, while the README promises a NULL object. The
+   same happens when every track has a single fix. Behind it, `csv_2_rds.R` would not have written
+   an output for zero rows either: it calls `storeResult` only in the non-empty branch. Corrected
+   behaviour: python writes an empty `link.csv` and `meta.csv`, R stores the NULL output — an
+   empty file, the platform's convention, which the next R App rejects with code 10.
+2. **DST ambiguity, R → python.** R writes local wall-clock times without an offset; python
+   re-localises them with `tz_localize(tzone)`. Two fixes at 00:30 and 01:30 UTC on 2021-10-31 in
+   `Europe/Berlin` both become `2021-10-31 02:30:00.000`, and the App fails with
+   `AmbiguousTimeError` — for instants R held unambiguously. The fix transmits UTC in `link.csv`
+   (`tzone` stays in `meta.csv`) and converts on the python side. The existing tests that pin the
+   raise and localise wall-clock times are changed deliberately. For UTC data — all real data —
+   `link.csv` stays byte-identical.
+3. **Sub-second precision is lost, python → R.** python writes `…:31.123`, `readLink` parses with
+   `%S` and truncates: 75 fixes of input2 come back up to 0.999 s early. The fix parses with `%OS`.
+4. **Single-fix tracks vanish silently, R → python.** movingpandas cannot form a trajectory from
+   one point; `input_move2loc_List` goes in with 5 rows in 4 tracks and comes back with 2 rows in
+   1 track. Not fixable within the format. The fix: `TransformToPickle` logs a warning naming
+   every dropped track and its row count, so the App log shows the loss. The output stays as is.
+5. **logical comes back as character, python → R.** python writes `True`/`False`, which
+   `read.csv` does not recognise. The fix: `readLink` turns a column holding only `True`, `False`
+   and `NA` back into logical. The other class changes are inherent to the CSV bridge and stay
+   pinned in `classes.csv`.
+
+Measured and **not** a defect: a tz-aware index. movingpandas drops the timezone itself, so
+`TransformToCsv.get_timezone` never sees one; its tz-aware branch is dead code and stays untouched.
 
 The CSV pair is created and consumed inside one App, so a contract fix creates no ordering
 constraint between App versions.
@@ -298,15 +329,15 @@ One commit per step, each green on its own:
 1. Replace `r/data/raw/` with the Template set.
 2. Goldens and type mapping, produced by `v2.2.0`; generator committed.
 3. Python gaps and contract tests, pinning today's behaviour and green against today's code. A
-   test for a suspected defect arrives with its fix in step 7, not here.
+   test for a defect arrives with its fix in step 7, not here.
 4. R refactoring into `link.R` plus testthat — **still on the old image**: the refactoring alone
    changes nothing.
 5. The port: `moveapps`, the new lock, the `Dockerfile` (`BASE`, conda from the image,
    `DIRECTION`), `conda run` in the scripts, `r/src/` removed: R 4.6.1 and the new packages change
    nothing. Steps 4 and 5 are separate proofs, so a deviation has exactly one cause.
 6. CI: stand-in, bake, test target, coherence check, the `app` job.
-7. Defect fixes, one commit each. If defect 3 is confirmed, the non-UTC round-trip case joins the
-   suite with its fix; until then step 6 runs the UTC inputs only.
+7. Defect fixes, one commit each. Until its fix, the DST case runs in the round trip as an expected
+   failure of the r2python step; the empty case joins with fix 1.
 8. README: building with `--build-arg DIRECTION=…`, and the one line that differs per App.
 
 ## Delivery
@@ -322,8 +353,10 @@ Each step after an explicit go:
 
 ## Risks
 
-- **bake resolving `FROM ${BASE}` through a `target:` context** is expected, not measured. It is
-  the first step of the plan. Fallback: a local registry as a service container.
+- **bake resolving `FROM ${BASE}` through a `target:` context** — measured locally (buildx 0.37.1,
+  BuildKit 0.25.1) with stand-in images: the matrix over both directions, `COPY --from` between the
+  App targets, and the refusal of an invalid `DIRECTION` all work. Not yet measured on the GitHub
+  runner's builder. Fallback: a local registry as a service container.
 - **The stand-in can drift from the co-pilot.** The coherence check catches a version mismatch;
   a republished rocker tag under the same R version it cannot. The digest comment and the
   groundcontrol follow-up below are the mitigation.
