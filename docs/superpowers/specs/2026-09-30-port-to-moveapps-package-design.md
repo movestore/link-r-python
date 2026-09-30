@@ -154,7 +154,8 @@ List file, R → python → R through each image's own `start-process.sh`:
 ```dockerfile
 ARG BASE=registry.gitlab.com/couchbits/movestore/movestore-groundcontrol/co-pilot-r:v4.0.0_sdk-v1.0.3_geospatial-4.6.1_4674
 # the very conda the python co-pilot ships
-FROM condaforge/miniforge3:26.7.2-0 AS conda
+ARG CONDA=registry.gitlab.com/couchbits/movestore/movestore-groundcontrol/co-pilot-v1-python:v3.1.0
+FROM ${CONDA} AS conda
 FROM ${BASE}
 COPY --from=conda /opt/conda /opt/conda
 ENV PATH=/opt/conda/bin:$PATH
@@ -174,6 +175,12 @@ COPY --chown=$UID:$GID ${DIRECTION}.sh start-process.sh
 
 - **`BASE`** exists for CI only. Its default is the private co-pilot, so the platform, which
   passes no build arguments, builds exactly what it builds today.
+- **`CONDA`** likewise. Its default is the python co-pilot `v3.1.0`, which is
+  `FROM condaforge/miniforge3:26.7.2-0` and leaves `/opt/conda` untouched. conda is taken from
+  there rather than from Docker Hub because no App version on the platform has ever pulled from
+  outside the couchbits GitLab registry: kaniko holds credentials for gitlab.com and the MPCDF
+  GitLab only, and no mirror. CI, which cannot pull the python co-pilot, passes
+  `CONDA=condaforge/miniforge3:26.7.2-0`.
 - **`DIRECTION` has no default, on purpose.** With one, forgetting to change it would silently
   build the wrong App; without one, the build fails and says why.
 - **`DIRECTION` is declared last, on purpose.** A changed ARG value is a cache miss for every
@@ -271,10 +278,11 @@ Plus one python-born case: an empty `TrajectoryCollection` through the python2r 
 - **Coherence check** — the pins nobody else compares. All must agree:
   - the stand-in's R version = `r/renv.lock` `.R.Version` = `geospatial-X` in the `BASE` default;
   - `moveapps` in `r/renv.lock` = `sdk-vX` in the `BASE` default;
-  - the Miniforge tag in `Dockerfile` = the one in `test/Dockerfile`.
+  - the Miniforge tag CI passes as `CONDA` = the one in `test/Dockerfile`.
 
-  The stand-in's rocker digest against the co-pilot's cannot be checked (private); the stand-in
-  says so where it pins it.
+  Two pairs cannot be checked, because the co-pilots are private: the stand-in's rocker digest
+  against the R co-pilot's, and the Miniforge tag against the python co-pilot's base. Each is
+  stated where it is pinned.
 - **P3M binaries, in the stand-in only**:
   `RENV_CONFIG_REPOS_OVERRIDE=https://p3m.dev/cran/__linux__/noble/latest`. The versions stay the
   lock's; only the build path differs from the platform, which compiles from source. Where P3M
