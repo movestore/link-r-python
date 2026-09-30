@@ -4,6 +4,9 @@ import shutil
 import tempfile
 import unittest
 
+import movingpandas as mpd
+import pandas as pd
+
 from ..transform_to_csv import TransformToCsv
 from ..transform_to_pickle import TransformToPickle
 
@@ -98,6 +101,20 @@ class TransformToCsvTestCase(unittest.TestCase):
         self.assertEqual('timestamp_utc', actual[0])
         self.assertIn('coords_x', actual)
         self.assertIn('coords_y', actual)
+
+    def test_it_should_write_empty_files_for_an_empty_trajectory_collection(self):
+        # arrange
+        empty = os.path.join(self.tmp.name, 'empty_output_file')
+        pd.to_pickle(mpd.TrajectoryCollection([]), empty, compression='gzip')
+        link = os.path.join(self.tmp.name, 'link.csv')
+        meta = os.path.join(self.tmp.name, 'meta.csv')
+
+        # act
+        self.sut.convert(input_data_file_name=empty, output_file_name=link, output_meta_file_name=meta)
+
+        # assert: empty files tell R to hand on the NULL result
+        self.assertEqual(0, os.path.getsize(link))
+        self.assertEqual(0, os.path.getsize(meta))
 
     def __uncompressed_copy(self) -> str:
         """

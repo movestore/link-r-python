@@ -55,8 +55,13 @@ writeLink <- function(data, bufferFile, metaFile) {
   write.csv(linkTable(data = data), bufferFile, row.names=FALSE)
 }
 
-# NULL for a buffer without rows
+# NULL for an empty buffer or a buffer without rows
 readLink <- function(bufferFile, metaFile) {
+  # python writes an empty buffer for an empty TrajectoryCollection
+  if (file.size(bufferFile) == 0) {
+    return(NULL)
+  }
+
   # always includes "coords_x", "coords_y"
   datapy <- read.csv(bufferFile, header=TRUE)
   # always includes crs, tzone, timeColName, trackIdColName

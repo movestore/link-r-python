@@ -73,3 +73,17 @@ test_that("readLink leaves python's True and False as text (v2.2.0, pinned)", {
   # assert
   expect_equal(actual$visible, c("True", "False"))
 })
+
+test_that("readLink returns NULL for an empty buffer file", {
+  # arrange: python writes one for an empty TrajectoryCollection
+  buffer <- tempfile(fileext = ".csv")
+  file.create(buffer)
+  meta <- tempfile(fileext = ".csv")
+  file.create(meta)
+
+  # act
+  actual <- readLink(bufferFile = buffer, metaFile = meta)
+
+  # assert
+  expect_null(actual)
+})
