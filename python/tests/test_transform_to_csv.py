@@ -66,6 +66,39 @@ class TransformToCsvTestCase(unittest.TestCase):
         # verify: `None` is how pandas is told not to decompress at all
         self.assertIsNone(actual)
 
+    def test_it_should_write_crs_timezone_and_column_names_to_the_meta_csv(self):
+        # arrange
+        data = self.sut.read_data_pickle(file_path=self.compressed)
+        geopandas = self.sut.create_geopandas(data=data)
+        meta = os.path.join(self.tmp.name, 'meta.csv')
+
+        # act
+        self.sut.write_meta_csv(geopanda=geopandas, movingpanda=data, file_path=meta)
+
+        # assert: the time column is the index movingpandas built from `timestamp_utc`
+        with open(meta) as written:
+            actual = written.read().splitlines()
+        self.assertEqual(
+            ['crs,tzone,timeColName,trackIdColName', 'EPSG:4326,UTC,timestamp_utc,individual_name_deployment_id'],
+            actual
+        )
+
+    def test_it_should_write_the_time_index_and_the_coordinates_to_the_link_csv(self):
+        # arrange
+        data = self.sut.read_data_pickle(file_path=self.compressed)
+        geopandas = self.sut.create_geopandas(data=data)
+        link = os.path.join(self.tmp.name, 'link.csv')
+
+        # act
+        self.sut.write_result(file_name=link, data=geopandas)
+
+        # assert
+        with open(link) as written:
+            actual = written.readline().rstrip('\n').split(',')
+        self.assertEqual('timestamp_utc', actual[0])
+        self.assertIn('coords_x', actual)
+        self.assertIn('coords_y', actual)
+
     def __uncompressed_copy(self) -> str:
         """
         Unpacks the compressed output into what an App on the previous release would have written.

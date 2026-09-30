@@ -15,9 +15,11 @@ RUN conda env create --prefix ${ENV_PREFIX} --file python/environment.yml && \
     conda clean --all --yes
 
 COPY python/ ./python/
+# the golden CSV pairs the contract test reads, shared with the R tests
+COPY test/contract/ ./test/contract/
 
 # `--no-capture-output` or conda swallows the result, including a failure.
 # The test modules are named explicitly: they use relative imports and there is no
 # `__init__.py`, so `unittest discover` does not find them reliably.
 RUN conda run --no-capture-output --prefix ${ENV_PREFIX} python -m unittest \
-    python.tests.test_transform_to_pickle python.tests.test_transform_to_csv
+    python.tests.test_transform_to_pickle python.tests.test_transform_to_csv python.tests.test_contract

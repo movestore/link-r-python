@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 
 import pytz
 
-from ..transform_to_pickle import TransformToPickle
+from ..transform_to_pickle import Meta, TransformToPickle
 
 
 class TransformToPickleTestCase(unittest.TestCase):
@@ -77,6 +77,32 @@ class TransformToPickleTestCase(unittest.TestCase):
             with open(output, 'rb') as written:
                 actual = written.read(2)
             self.assertEqual(b'\x1f\x8b', actual)
+
+    def test_it_should_read_the_meta_csv(self):
+        # arrange
+        file_path = './python/sample/input4/meta.csv'
+
+        # act
+        actual = self.sut.read_meta_csv(file_path=file_path)
+
+        # assert
+        self.assertEqual(
+            Meta(projection='EPSG:4326', timezone='UTC', time_col_name='timestamp', track_id_col_name='individual_name_deployment_id'),
+            actual
+        )
+
+    def test_it_should_create_one_trajectory_per_track_in_the_crs_of_the_meta_csv(self):
+        # arrange
+        meta = self.sut.read_meta_csv(file_path='./python/sample/input4/meta.csv')
+        data = self.sut.read_data_csv(file_path='./python/sample/input4/link.csv', time_col_name=meta.time_col_name)
+        self.sut.adjust_timestamps(data=data, timezone=meta.timezone, time_col_name=meta.time_col_name)
+
+        # act
+        actual = self.sut.create_moving_pandas(data=data, projection=meta.projection, track_id_col_name=meta.track_id_col_name)
+
+        # assert: the sample carries three distinct tracks
+        self.assertEqual(3, len(actual.trajectories))
+        self.assertEqual('EPSG:4326', actual.trajectories[0].df.crs.to_string())
 
 if __name__ == '__main__':
     unittest.main()
