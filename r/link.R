@@ -45,7 +45,8 @@ linkTable <- function(data) {
   } ## st_as_sfc() can be used to convert these columns back to spacial
 
   data.csv <- data.frame(data)
-  data.csv[,mt_time_column(data)] <- format(data.csv[,mt_time_column(data)],format="%Y-%m-%d %H:%M:%OS3") ## if time is 00:00:00 it gets rounded just to the date, and if miliseconds are .000 it gets rounded to seconds when saved as csv. This ensures this does not happen. All timestamps will always have miliseconds.
+  ## UTC instants: a wall-clock time repeats in the autumn DST hour and python could not tell the two apart; meta.csv keeps the tzone
+  data.csv[,mt_time_column(data)] <- format(data.csv[,mt_time_column(data)],format="%Y-%m-%d %H:%M:%OS3", tz="UTC") ## if time is 00:00:00 it gets rounded just to the date, and if miliseconds are .000 it gets rounded to seconds when saved as csv. This ensures this does not happen. All timestamps will always have miliseconds.
   data.csv
 }
 

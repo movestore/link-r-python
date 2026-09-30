@@ -4,8 +4,6 @@ import tempfile
 import unittest
 from zoneinfo import ZoneInfo
 
-import pytz
-
 from ..transform_to_pickle import Meta, TransformToPickle
 
 
@@ -18,10 +16,10 @@ class TransformToPickleTestCase(unittest.TestCase):
         # execute
         actual = self.sut.adjust_timestamps(data, timezone='+02:00', time_col_name='timestamp')
         # verify
-        # csv value: 2013-08-08 06:47:31
-        expected = datetime.datetime(2013, 8, 8, 6, 47, 31, tzinfo=ZoneInfo('Europe/Berlin'))
+        # csv value: 2013-08-08 06:47:31, a UTC instant
+        expected = datetime.datetime(2013, 8, 8, 8, 47, 31, tzinfo=ZoneInfo('Europe/Berlin'))
         self.assertEqual(expected, actual['timestamp_tz'][0].to_pydatetime())
-        self.assertEqual(datetime.datetime(2013, 8, 8, 4, 47, 31, tzinfo=None), actual['timestamp_utc'][0].to_pydatetime())
+        self.assertEqual(datetime.datetime(2013, 8, 8, 6, 47, 31, tzinfo=None), actual['timestamp_utc'][0].to_pydatetime())
 
     def test_apply_timezone_name_kolkata(self):
         # prepare
@@ -30,11 +28,11 @@ class TransformToPickleTestCase(unittest.TestCase):
         # Asia/Kolkata aka UTC+05:30
         actual = self.sut.adjust_timestamps(data, timezone='Asia/Kolkata', time_col_name='timestamp')
         # verify
-        # csv value: 2013-08-08 06:47:31
-        expected = datetime.datetime(2013, 8, 8, 6, 47, 31, tzinfo=ZoneInfo('Asia/Kolkata'))
+        # csv value: 2013-08-08 06:47:31, a UTC instant
+        # 06:47:31 UTC is 12:17:31 at UTC+05:30 on the same day - India has no DST
+        expected = datetime.datetime(2013, 8, 8, 12, 17, 31, tzinfo=ZoneInfo('Asia/Kolkata'))
         self.assertEqual(expected, actual['timestamp_tz'][0].to_pydatetime())
-        # 06:47:31 at UTC+05:30 is 01:17:31 UTC on the same day - India has no DST
-        self.assertEqual(datetime.datetime(2013, 8, 8, 1, 17, 31, tzinfo=None), actual['timestamp_utc'][0].to_pydatetime())
+        self.assertEqual(datetime.datetime(2013, 8, 8, 6, 47, 31, tzinfo=None), actual['timestamp_utc'][0].to_pydatetime())
 
     def test_apply_timezone_name_utc(self):
         # prepare
@@ -47,19 +45,23 @@ class TransformToPickleTestCase(unittest.TestCase):
         self.assertEqual(expected, actual['timestamp_tz'][0].to_pydatetime())
         self.assertEqual(datetime.datetime(2013, 8, 8, 6, 47, 31, tzinfo=None), actual['timestamp_utc'][0].to_pydatetime())
 
-    def test_ambiguous_dst_timestamp_should_raise_error(self):
+    def test_an_instant_in_the_repeated_dst_hour_should_convert(self):
         # prepare
         data = self.sut.read_data_csv(file_path='./python/tests/data/link-dst-ambiguous.csv', time_col_name='timestamp')
-        # execute & verify
-        # pytz.exceptions.AmbiguousTimeError: Cannot infer dst time from 2013-10-27 01:16:03, try using the 'ambiguous' argument
-        self.assertRaises(pytz.exceptions.AmbiguousTimeError, self.sut.adjust_timestamps, data, timezone='Europe/London', time_col_name='timestamp')
+        # execute
+        actual = self.sut.adjust_timestamps(data, timezone='Europe/London', time_col_name='timestamp')
+        # verify: 01:16:03 UTC is 01:16:03 GMT, just after British Summer Time ended at 01:00 UTC
+        self.assertEqual(datetime.datetime(2013, 10, 27, 1, 16, 3, tzinfo=datetime.timezone.utc), actual['timestamp_tz'][0].to_pydatetime())
+        self.assertEqual(datetime.datetime(2013, 10, 27, 1, 16, 3), actual['timestamp_utc'][0].to_pydatetime())
 
-    def test_non_existent_timestamp_should_raise_error(self):
+    def test_an_instant_in_the_skipped_dst_hour_should_convert(self):
         # prepare
         data = self.sut.read_data_csv(file_path='./python/tests/data/link-dst-nonexistent.csv', time_col_name='timestamp')
-        # execute & verify
-        # pytz.exceptions.NonExistentTimeError: 2014-03-30 01:24:20
-        self.assertRaises(pytz.exceptions.NonExistentTimeError, self.sut.adjust_timestamps, data, timezone='Europe/London', time_col_name='timestamp')
+        # execute
+        actual = self.sut.adjust_timestamps(data, timezone='Europe/London', time_col_name='timestamp')
+        # verify: 01:24:20 UTC is 02:24:20 BST, British Summer Time began at 01:00 UTC
+        self.assertEqual(datetime.datetime(2014, 3, 30, 1, 24, 20, tzinfo=datetime.timezone.utc), actual['timestamp_tz'][0].to_pydatetime())
+        self.assertEqual(datetime.datetime(2014, 3, 30, 1, 24, 20), actual['timestamp_utc'][0].to_pydatetime())
 
     def test_it_should_write_a_gzip_compressed_pickle(self):
         # prepare

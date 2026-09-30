@@ -35,8 +35,9 @@ class TransformToPickle:
         return deserialized
 
     def adjust_timestamps(self, data, timezone, time_col_name):
+        # link.csv carries UTC instants; `timezone` is how R displayed them
         # kudos: https://stackoverflow.com/a/18912631/810944
-        data['timestamp_tz'] = data[time_col_name].apply(lambda x: x.tz_localize(timezone))
+        data['timestamp_tz'] = data[time_col_name].apply(lambda x: x.tz_localize('UTC').tz_convert(timezone))
 
         # prepare data for movingpandas b/c of https://github.com/movingpandas/movingpandas/issues/303
         # we need our timestamps in timezone 'UTC'; movingpandas can not work w/ timezone-info

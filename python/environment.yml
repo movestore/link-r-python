@@ -12,8 +12,7 @@ dependencies:
   - python
   # The ceiling is deliberate and belongs in its own ticket: pandas 3 switches the default string
   # dtype and datetime resolution (`str`, `datetime64[us]`), which reaches the R side through the CSV
-  # this App writes, and no test here covers that. It also drops the pytz dependency that
-  # `tests/test_transform_to_pickle.py` borrows transitively.
+  # this App writes, and no test here covers that.
   - pandas>=2.3.3,<3
   - geopandas
   - movingpandas

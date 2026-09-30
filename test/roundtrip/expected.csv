@@ -1,5 +1,5 @@
 "case","r2python_exit","python2r_exit","rows_out","tracks_out","max_time_deviation_s","time_column_out","tzone_out","dropped_tracks_warned"
-"dst_ambiguous",1,,,,,,,0
+"dst_ambiguous",0,0,2,1,"0.000","timestamp_utc","UTC",0
 "empty_trajectory_collection",,0,0,,,,,
 "input1_move2loc_LatLon",0,0,3243,1,"0.000","timestamp_utc","UTC",0
 "input1_move2loc_LatLon_berlin",0,0,3243,1,"0.000","timestamp_utc","UTC",0
