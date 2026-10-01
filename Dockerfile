@@ -21,14 +21,15 @@ USER $USER
 ENV PROJECT_DIR=$HOME/co-pilot-r
 WORKDIR $PROJECT_DIR
 
-# the python part, built like every python App
+# the python part: the explicit lock python/lock.sh resolves from python/environment.yml, so the App gets
+# exactly what CI tested
 WORKDIR $PROJECT_DIR/python
-COPY --chown=$UID:$GID python/environment.yml /tmp/
+COPY --chown=$UID:$GID python/conda-linux-64.lock /tmp/
 # keep in mind that anaconda aka channel `conda` is blocked in production env
 # https://gitlab.mpcdf.mpg.de/mpcdf-hpc-cloud/mvpr-moveapps/-/issues/29
 # miniforge uses channel `conda-forge` as default - so nothing to do here
 ENV ENV_PREFIX=$PROJECT_DIR/python-env
-RUN conda env create --prefix $ENV_PREFIX --file /tmp/environment.yml && \
+RUN conda create --yes --prefix $ENV_PREFIX --file /tmp/conda-linux-64.lock && \
     conda clean --all --yes
 
 # the r part: the translator's own renv project in r/

@@ -27,8 +27,17 @@ The platform passes no build arguments. The Dockerfile of an App version is ther
 line changed: `ARG DIRECTION` becomes `ARG DIRECTION=r2python` or `ARG DIRECTION=python2r`. A copy without that edit
 fails the build.
 
+## Python environment
+`python/environment.yml` says what the python half needs; `python/conda-linux-64.lock` is what the App and the python
+tests install. Refresh the lock before every release and after any change to `environment.yml`, then commit it:
+
+    python/lock.sh
+
+It resolves for linux-64 with the Miniforge of `test/Dockerfile`. CI fails while the lock was not made from the current
+`environment.yml`; the weekly run tests a fresh resolution and warns when the lock is behind it.
+
 ## Tests
-- python: `docker build -f test/Dockerfile .`
+- python: `docker build -f test/Dockerfile .` (linux/amd64, emulated on an arm64 host)
 - both Apps, on public images only - the R tests, the round trip R → python → R and a check that the pinned versions
   agree: `docker buildx bake -f test/docker-bake.hcl test`
 - the golden CSV pairs (`test/contract/`) and the round-trip expectations (`test/roundtrip/*.csv`) were produced by the

@@ -10,6 +10,7 @@ RUN R -q -e 'renv::install("testthat@3.3.2")'
 
 WORKDIR /home/moveapps/co-pilot-r
 COPY --chown=$UID:$GID Dockerfile ./Dockerfile
+COPY --chown=$UID:$GID python/environment.yml python/conda-linux-64.lock ./python/
 COPY --chown=$UID:$GID test/ ./test/
 COPY --chown=$UID:$GID r/tests/ ./r/tests/
 COPY --chown=$UID:$GID r/data/raw/ ./r/data/raw/

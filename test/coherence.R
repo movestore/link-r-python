@@ -11,6 +11,7 @@ base <- grep("^ARG BASE=", readLines(file.path(root, "Dockerfile")), value = TRU
 lock <- jsonlite::fromJSON(file.path(root, "r", "renv.lock"))
 bake <- paste(readLines(file.path(root, "test", "docker-bake.hcl")), collapse = "\n")
 testDockerfile <- paste(readLines(file.path(root, "test", "Dockerfile")), collapse = "\n")
+condaLock <- paste(readLines(file.path(root, "python", "conda-linux-64.lock")), collapse = "\n")
 
 check <- function(label, left, right) {
   ok <- !is.na(left) && !is.na(right) && identical(left, right)
@@ -24,6 +25,9 @@ results <- c(
   check("moveapps in r/renv.lock / sdk-vX of BASE", lock$Packages$moveapps$Version, field(base, "_sdk-v([0-9.]+)_")),
   check("Miniforge CI passes as CONDA / Miniforge of test/Dockerfile",
         field(bake, 'default = "condaforge/miniforge3:([0-9A-Za-z._-]+)"'),
-        field(testDockerfile, "FROM condaforge/miniforge3:([0-9A-Za-z._-]+)"))
+        field(testDockerfile, "condaforge/miniforge3:([0-9A-Za-z._-]+)")),
+  check("environment.yml / its md5 in python/conda-linux-64.lock (python/lock.sh)",
+        unname(tools::md5sum(file.path(root, "python", "environment.yml"))),
+        field(condaLock, "# environment.yml md5: ([0-9a-f]{32})"))
 )
 if (!all(results)) quit(status = 1)

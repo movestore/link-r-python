@@ -1,3 +1,4 @@
+# The App installs python/conda-linux-64.lock, resolved from this file: run python/lock.sh after any change here.
 name: link-r-python
 channels:
   - conda-forge
