@@ -1,4 +1,4 @@
-#!/bin/bash --login
+#!/bin/bash
 ########################################################################################################################
 # converts from R .rds to Python .pickle
 ########################################################################################################################
@@ -14,4 +14,4 @@ set -a
 set +a
 
 (cd r && Rscript rds_2_csv.R)
-(cd python && conda activate "$HOME"/co-pilot-r/python-env && python csv_2_pickle.py)
+(cd python && conda run --no-capture-output --prefix "$ENV_PREFIX" python csv_2_pickle.py)

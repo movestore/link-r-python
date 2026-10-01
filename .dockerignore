@@ -14,5 +14,7 @@ x-archive
 # dev-only bulk, copied by neither the App image nor the test image.
 # `python/sample/**` is deliberately NOT excluded - the tests build their fixtures from it.
 r/data/
+# ...except the samples the round trip reads in CI
+!r/data/raw
 notebook/
 python/notebooks/
