@@ -15,8 +15,10 @@ variable "FRESH" {
   default = "false"
 }
 
-# the python co-pilot's own base; test/coherence.R holds test/Dockerfile to the same tag
-variable "CONDA" {
+# the python co-pilot's own base; test/coherence.R holds test/Dockerfile to the same tag.
+# Not named CONDA: bake overrides a variable from the environment variable of the same name, and
+# GitHub's runners export CONDA=/usr/share/miniconda.
+variable "CONDA_IMAGE" {
   default = "condaforge/miniforge3:26.7.2-0"
 }
 
@@ -53,7 +55,7 @@ target "app" {
   }
   args = {
     BASE = "co-pilot-r"
-    CONDA = CONDA
+    CONDA = CONDA_IMAGE
     DIRECTION = direction
   }
   no-cache = FRESH == "true"
@@ -85,7 +87,7 @@ target "app-without-direction" {
   }
   args = {
     BASE = "co-pilot-r"
-    CONDA = CONDA
+    CONDA = CONDA_IMAGE
   }
 }
 
