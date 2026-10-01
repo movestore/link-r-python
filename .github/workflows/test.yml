@@ -64,8 +64,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    # a first guess with headroom; set from the first measured cold run
-    timeout-minutes: 90
+    # about twice a cold run (8m36s measured, no cache): cuts off a hang, not a slow runner
+    timeout-minutes: 20
     env:
       CACHE: gha
 
