@@ -78,3 +78,15 @@ test_that("linkTable writes UTC instants, whatever the tzone", {
   # assert: 06:40 UTC is 08:40 in Berlin; link.csv carries the instant, meta.csv the zone
   expect_equal(actual$timestamp[1], "2021-07-01 06:40:00.000")
 })
+
+test_that("linkTable rounds to the millisecond, so a time stored just below its millisecond keeps it", {
+  # arrange: 35.999 stored as 35.998999..., as 10 of 75 sub-second fixes of input2 are
+  data <- readCase("subsecond")
+  data[[mt_time_column(data)]] <- mt_time(data) - 1e-6
+
+  # act
+  actual <- linkTable(data = data)
+
+  # assert
+  expect_equal(actual$timestamp, c("2014-08-06 09:19:35.000", "2014-08-06 09:19:35.999", "2014-08-06 09:19:36.999", "2014-08-06 09:19:38.000"))
+})

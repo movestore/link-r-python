@@ -4,8 +4,8 @@
 "input1_move2loc_LatLon",0,0,3243,1,"0.000","timestamp_utc","UTC",0
 "input1_move2loc_LatLon_berlin",0,0,3243,1,"0.000","timestamp_utc","UTC",0
 "input1_move2loc_Mollweide",0,0,3243,1,"0.000","timestamp_utc","UTC",0
-"input2_move2loc_LatLon",0,0,98285,3,"0.001","timestamp_utc","UTC",0
-"input2_move2loc_Mollweide",0,0,98285,3,"0.001","timestamp_utc","UTC",0
+"input2_move2loc_LatLon",0,0,98285,3,"0.000","timestamp_utc","UTC",0
+"input2_move2loc_Mollweide",0,0,98285,3,"0.000","timestamp_utc","UTC",0
 "input3_move2loc_LatLon",0,0,3169,5,"0.000","timestamp_utc","UTC",0
 "input3_move2loc_Mollweide",0,0,3169,5,"0.000","timestamp_utc","UTC",0
 "input4_move2loc_LatLon",0,0,7770,3,"0.000","timestamp_utc","UTC",0
