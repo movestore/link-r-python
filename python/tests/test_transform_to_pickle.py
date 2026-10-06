@@ -128,5 +128,28 @@ class TransformToPickleTestCase(unittest.TestCase):
         actual = [line for line in output.getvalue().splitlines() if line.startswith('[WARN]')]
         self.assertEqual(['[WARN] track a dropped: a trajectory needs at least two fixes, it has 1'], actual)
 
+    def test_it_should_write_trajectories_with_point_locations(self):
+        # Readers access `trajectory.df.geometry` directly: movingpandas < 0.22 does it in
+        # `TrajectoryStopDetector`, Apps do it in their own code. A geometry movingpandas >= 0.22
+        # left to be built on demand arrives there as None.
+        # arrange
+        with tempfile.TemporaryDirectory() as tmp:
+            output = os.path.join(tmp, 'output_file')
+
+            # act
+            self.sut.convert(
+                input_data_file_name='./python/sample/input4/link.csv',
+                input_meta_file_name='./python/sample/input4/meta.csv',
+                output_file_name=output
+            )
+            actual = pd.read_pickle(output, compression='gzip')
+
+        # assert
+        for trajectory in actual.trajectories:
+            self.assertEqual(0, trajectory.df.geometry.isna().sum(), trajectory.id)
+        # csv: earliest fix of 'X742..deploy_id.56853924.' at 2013-08-08 06:47:31
+        first = actual.trajectories[0].df.geometry.iloc[0]
+        self.assertEqual((48.761833, 69.128117), (first.x, first.y))
+
 if __name__ == '__main__':
     unittest.main()
