@@ -1,5 +1,6 @@
 import os
 
+import geopandas as gpd
 import movingpandas as mpd
 import pandas as pd
 from dataclasses import dataclass
@@ -47,13 +48,19 @@ class TransformToPickle:
         return data
 
     def create_moving_pandas(self, data, projection, track_id_col_name):
+        # Build the points here, not via movingpandas' `x`/`y`: since 0.22 that path leaves the
+        # geometry None and builds it on demand, which a reader on movingpandas < 0.22 - or one
+        # reading `trajectory.df.geometry` directly - never does. Dropping x/y keeps the columns
+        # movingpandas 0.17.2 handed over.
+        points = gpd.GeoDataFrame(
+            data.drop(columns=['coords_x', 'coords_y']),
+            geometry=gpd.points_from_xy(data['coords_x'], data['coords_y']),
+            crs=projection
+        )
         move = mpd.TrajectoryCollection(
-            data,
+            points,
             traj_id_col=track_id_col_name,
-            crs=projection,
-            t='timestamp_utc',  # use our converted timezone column (UTC)
-            x='coords_x',
-            y='coords_y'
+            t='timestamp_utc'  # use our converted timezone column (UTC)
         )
         print(move)
         return move
