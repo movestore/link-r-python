@@ -1,0 +1,2 @@
+# test-only code: keeps testthat out of the App's lock, and so out of the hangar inspection
+tests/

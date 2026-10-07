@@ -1,0 +1,2 @@
+"crs","tzone","timeColName","trackIdColName"
+"EPSG:4326","Europe/Berlin","timestamp","individual_local_identifier"

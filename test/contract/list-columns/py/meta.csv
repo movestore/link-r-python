@@ -1,0 +1,2 @@
+crs,tzone,timeColName,trackIdColName
+EPSG:4326,UTC,timestamp_utc,individual_local_identifier

@@ -75,6 +75,11 @@ class TransformToCsv:
 
     def convert(self, input_data_file_name, output_file_name, output_meta_file_name):
         data = self.read_data_pickle(file_path=input_data_file_name)
+        if len(data.trajectories) == 0:
+            # nothing to hand over, not even a crs: empty files tell R to store the NULL result
+            open(output_file_name, 'w').close()
+            open(output_meta_file_name, 'w').close()
+            return
         geopandas = self.create_geopandas(data=data)
         self.write_result(file_name=output_file_name, data=geopandas)
         self.write_meta_csv(geopanda=geopandas, movingpanda=data, file_path=output_meta_file_name)

@@ -11,12 +11,12 @@ on:
   # so a fresh resolution can be checked after a suspected break, instead of waiting for Monday
   workflow_dispatch:
 
-# `true` exactly for the runs that must resolve the conda environment from scratch.
-# `test/Dockerfile` resolves the environment in its own layer - correctly, it is what keeps a
-# source-only change cheap - but since v2.2.0 that environment is deliberately open: only `pandas`
-# carries a floor and a ceiling. So a cached layer lets this suite report green against a
-# resolution nobody has re-checked, and nothing evicts it on its own, because every push's
-# `cache-from` resets GitHub's seven-day idle timer.
+# `true` exactly for the runs that must resolve from scratch. The App and the python tests install
+# `python/conda-linux-64.lock`, so an ordinary run is reproducible. But `environment.yml` is deliberately
+# open since v2.2.0 - only `pandas` carries a floor and a ceiling - and the lock is refreshed from it
+# before a release. These runs resolve it as it stands today and test that: the next lock. They skip
+# every cache, which nothing would evict on its own, because every push's `cache-from` resets
+# GitHub's seven-day idle timer.
 env:
   FRESH: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
 
@@ -57,3 +57,66 @@ jobs:
           # after the tests have already passed. Import is unaffected - a PR may read the cache of
           # its own branch, the base branch and the default branch - so fork PRs stay warm.
           cache-to: type=gha,mode=max,ignore-error=true
+          # fresh runs test environment.yml resolved today, ordinary runs the lock the App installs
+          build-args: ENVIRONMENT=${{ env.FRESH == 'true' && 'fresh' || 'lock' }}
+          # the comparison below reads the image
+          load: ${{ env.FRESH == 'true' }}
+          tags: link-r-python-python-tests
+
+      # A lock behind today's resolution is no failure - it is refreshed before a release - but it must
+      # not go unnoticed.
+      - name: Report whether the lock is behind
+        if: env.FRESH == 'true'
+        run: |
+          docker run --rm link-r-python-python-tests cat resolved.txt | sort > fresh.txt
+          grep '^https' python/conda-linux-64.lock | sort > lock.txt
+          if diff lock.txt fresh.txt > drift.txt; then
+            echo 'python/conda-linux-64.lock is current' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo '::warning::python/conda-linux-64.lock is behind environment.yml resolved today - run python/lock.sh'
+            { echo '### python/conda-linux-64.lock is behind'; echo '```diff'; cat drift.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  app:
+    name: App images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    # about twice a cold run (8m36s measured, no cache): cuts off a hang, not a slow runner
+    timeout-minutes: 20
+    env:
+      CACHE: gha
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build both Apps and test them inside the images
+        uses: docker/bake-action@v7
+        with:
+          source: .
+          files: test/docker-bake.hcl
+          targets: test
+
+      # The platform passes no build arguments, so a Dockerfile copy without its DIRECTION edit must be
+      # refused. The builder still holds every layer from the step above, so this costs the last ones only.
+      # The grep makes sure the build failed at the check, not somewhere else: it matches the message
+      # the check prints, anchored at the line end, because the log also quotes the command that prints it.
+      - name: A build without a valid DIRECTION must fail
+        env:
+          CACHE: ''
+        run: |
+          for target in app-without-direction app-with-invalid-direction; do
+            if docker buildx bake -f test/docker-bake.hcl "$target" > "$target.log" 2>&1; then
+              echo "::error::$target was built"
+              exit 1
+            fi
+            if ! grep -q -E 'DIRECTION must be r2python or python2r$' "$target.log"; then
+              cat "$target.log"
+              echo "::error::$target failed for another reason"
+              exit 1
+            fi
+          done

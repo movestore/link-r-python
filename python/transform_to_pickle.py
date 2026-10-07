@@ -36,8 +36,9 @@ class TransformToPickle:
         return deserialized
 
     def adjust_timestamps(self, data, timezone, time_col_name):
+        # link.csv carries UTC instants; `timezone` is how R displayed them
         # kudos: https://stackoverflow.com/a/18912631/810944
-        data['timestamp_tz'] = data[time_col_name].apply(lambda x: x.tz_localize(timezone))
+        data['timestamp_tz'] = data[time_col_name].apply(lambda x: x.tz_localize('UTC').tz_convert(timezone))
 
         # prepare data for movingpandas b/c of https://github.com/movingpandas/movingpandas/issues/303
         # we need our timestamps in timezone 'UTC'; movingpandas can not work w/ timezone-info
@@ -63,7 +64,17 @@ class TransformToPickle:
             t='timestamp_utc'  # use our converted timezone column (UTC)
         )
         print(move)
+        self.warn_about_dropped_tracks(data=data, move=move, track_id_col_name=track_id_col_name)
         return move
+
+    def warn_about_dropped_tracks(self, data, move, track_id_col_name):
+        # movingpandas needs two fixes for a trajectory and drops a track with fewer without a word;
+        # the loss cannot be avoided in this format, but it must not stay silent
+        kept = {trajectory.id for trajectory in move.trajectories}
+        rows_per_track = data[track_id_col_name].value_counts()
+        for track_id, rows in sorted(rows_per_track.items(), key=lambda item: str(item[0])):
+            if track_id not in kept:
+                print(f'[WARN] track {track_id} dropped: a trajectory needs at least two fixes, it has {rows}')
 
     def write_result(self, file_name, data):
         print(type(data))

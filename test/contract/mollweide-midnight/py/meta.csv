@@ -1,0 +1,2 @@
+crs,tzone,timeColName,trackIdColName
+ESRI:54009,UTC,timestamp_utc,individual_local_identifier
